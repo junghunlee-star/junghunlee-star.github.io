@@ -763,21 +763,24 @@
         const camera = new THREE.PerspectiveCamera(
             50, window.innerWidth / window.innerHeight, 0.05, 150000,
         );
-        camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
-        if (HAS_EULER) {
-            // debug HUD와 동일한 YXZ Euler 규약으로 yaw/pitch 복원.
-            const e = new THREE.Euler(
-                (PITCH_DEG ?? 0) * DEG2RAD,
-                (YAW_DEG ?? 0) * DEG2RAD,
-                0,
-                'YXZ',
-            );
-            camera.quaternion.setFromEuler(e);
-        } else {
-            camera.rotation.set(DEFAULT_ROT.x, DEFAULT_ROT.y, DEFAULT_ROT.z);
+        function applySpawn() {
+            camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+            if (HAS_EULER) {
+                // debug HUD와 동일한 YXZ Euler 규약으로 yaw/pitch 복원.
+                const e = new THREE.Euler(
+                    (PITCH_DEG ?? 0) * DEG2RAD,
+                    (YAW_DEG ?? 0) * DEG2RAD,
+                    0,
+                    'YXZ',
+                );
+                camera.quaternion.setFromEuler(e);
+            } else {
+                camera.rotation.set(DEFAULT_ROT.x, DEFAULT_ROT.y, DEFAULT_ROT.z);
+            }
         }
+        applySpawn();
 
-        const initialQuaternion = camera.quaternion.clone();
+        let initialQuaternion = camera.quaternion.clone();
 
         const controls = new FirstPersonControls(camera, renderer.domElement);
         controls.enabled = true;
@@ -951,6 +954,12 @@
                 $loadPct.textContent = '100%';
                 $loadFill.style.width = '100%';
                 $loading.classList.add('hidden');
+                // LCC SDK가 로드 중 카메라 포즈를 건드릴 가능성을 차단하기 위해
+                // 로드 완료 직후 spawn을 재적용 + initialQuaternion 재캡처.
+                applySpawn();
+                initialQuaternion = camera.quaternion.clone();
+                console.info('[Viewer] spawn re-applied after LCC load:',
+                    camera.position.toArray(), camera.quaternion.toArray());
                 // Enable collision if available
                 if (typeof lccObj.hasCollision === 'function' && lccObj.hasCollision()) {
                     collisionActive = true;
