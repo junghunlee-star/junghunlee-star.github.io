@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LCC Viewer</title>
     <style>
         :root {
@@ -21,631 +20,490 @@
 
         html,
         body {
-            height: 100%;
-            overflow: hidden;
-            background: #000;
+            min-height: 100%;
+            background: #0a0a0a;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent;
+            color: #fff;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* ── Loading overlay ── */
-        #loading {
-            position: fixed;
-            inset: 0;
-            z-index: 50;
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
-            color: rgba(255, 255, 255, 0.7);
-            transition: opacity 400ms ease;
+            padding: 48px 24px;
         }
 
-        #loading.hidden {
-            opacity: 0;
-            pointer-events: none;
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
         }
 
-        #loading-eyebrow {
+        .header-eyebrow {
             font-size: 11px;
             letter-spacing: 0.25em;
             text-transform: uppercase;
-            opacity: 0.7;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 12px;
         }
 
-        #loading-percent {
-            font-size: 24px;
-            font-variant-numeric: tabular-nums;
-            color: #fff;
+        .header-title {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
         }
 
-        #loading-track {
-            width: 160px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.2);
+        .header-sub {
+            margin-top: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
         }
 
-        #loading-fill {
-            height: 100%;
-            width: 0%;
-            background: #fff;
-            transition: width 200ms ease;
+        /* ── 2-column grid ── */
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            max-width: 800px;
         }
 
-        #error-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 50;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.8);
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 14px;
+        @media (max-width: 600px) {
+            .columns {
+                grid-template-columns: 1fr;
+            }
         }
 
-        /* ── Top-right button column ── */
-        .top-buttons {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 30;
+        .column {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 8px;
         }
 
-        .ctrl-btn {
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .column-icon {
+            font-size: 16px;
+        }
+
+        .column-label {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .scene-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .scene-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 150ms, border-color 150ms, transform 100ms;
+        }
+
+        .scene-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .scene-btn:active {
+            transform: translateY(0);
+        }
+
+        .scene-btn-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .scene-btn-index {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.3);
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
+        }
+
+        .scene-btn-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .scene-btn-arrow {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.12em;
+            flex-shrink: 0;
+            transition: color 150ms;
+        }
+
+        .scene-btn:hover .scene-btn-arrow {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-msg {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 13px;
+            padding: 16px;
+            text-align: center;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .error-msg {
+            color: rgba(255, 100, 100, 0.8);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .loading-msg {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        /* ── Custom URL button ── */
+        .custom-url-trigger {
+            margin-top: 32px;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .custom-url-btn {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 999px;
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            font-size: 11px;
-            letter-spacing: 0.22em;
-            padding: 6px 12px;
+            gap: 8px;
+            padding: 14px 24px;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            font-family: inherit;
+            letter-spacing: 0.08em;
             cursor: pointer;
-            transition: background 120ms, color 120ms;
-            backdrop-filter: blur(4px);
+            transition: background 150ms, border-color 150ms, color 150ms;
         }
 
-        .ctrl-btn:hover {
+        .custom-url-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ── Modal ── */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 200ms;
+        }
+
+        .modal-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            width: 90%;
+            max-width: 480px;
+            padding: 28px 24px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            background: #141414;
+            transform: translateY(12px);
+            transition: transform 200ms;
+        }
+
+        .modal-backdrop.open .modal {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .modal-sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 150ms;
+        }
+
+        .modal-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-input:focus {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .modal-cancel,
+        .modal-go {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: background 120ms, transform 100ms;
+        }
+
+        .modal-cancel {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .modal-go {
+            border: none;
             background: #fff;
             color: #000;
         }
 
-        /* ── Desktop hint ── */
-        .desktop-hint {
-            position: fixed;
-            bottom: 12px;
-            left: 12px;
-            z-index: 30;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 12px;
-            font-size: 10px;
-            letter-spacing: 0.18em;
+        .modal-go:hover {
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        .modal-go:active,
+        .modal-cancel:active {
+            transform: translateY(0);
+        }
+
+        /* standalone-viewer link */
+        .footer-link {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .footer-link a {
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            text-decoration: none;
+            transition: color 150ms;
+        }
+
+        .footer-link a:hover {
             color: rgba(255, 255, 255, 0.7);
-        }
-
-        /* ── Height slider ── */
-        .height-slider {
-            position: fixed;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 30;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            touch-action: none;
-            user-select: none;
-        }
-
-        .height-slider-label {
-            font-size: 9px;
-            letter-spacing: 0.22em;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .height-slider-track {
-            position: relative;
-            width: 32px;
-            height: 160px;
-            cursor: ns-resize;
-        }
-
-        .height-slider-rail {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 1px;
-            height: 100%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.25);
-        }
-
-        .height-slider-baseline {
-            position: absolute;
-            left: 50%;
-            width: 12px;
-            height: 1px;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        .height-slider-knob {
-            position: absolute;
-            left: 50%;
-            width: 16px;
-            height: 16px;
-            transform: translate(-50%, 50%);
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(4px);
-        }
-
-        /* ── Joystick ── */
-        .joystick {
-            position: fixed;
-            bottom: 24px;
-            z-index: 30;
-            width: 128px;
-            height: 128px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(6px);
-            touch-action: none;
-            user-select: none;
-        }
-
-        .joystick.left {
-            left: 24px;
-        }
-
-        .joystick.right {
-            right: 24px;
-        }
-
-        .joystick-crosshair-h,
-        .joystick-crosshair-v {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            pointer-events: none;
-        }
-
-        .joystick-crosshair-h {
-            width: 24px;
-            height: 1px;
-            transform: translate(-50%, -50%);
-        }
-
-        .joystick-crosshair-v {
-            width: 1px;
-            height: 24px;
-            transform: translate(-50%, -50%);
-        }
-
-        .joystick-knob {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(4px);
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .joystick.active .joystick-knob {
-            transition: none;
-        }
-
-        .joystick-label {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            letter-spacing: 0.22em;
-            color: rgba(255, 255, 255, 0.6);
-            pointer-events: none;
         }
     </style>
 </head>
 
 <body>
-    <!-- Loading -->
-    <div id="loading">
-        <div id="loading-eyebrow">Loading 3D Space</div>
-        <div id="loading-percent">0%</div>
-        <div id="loading-track">
-            <div id="loading-fill"></div>
+    <div class="header">
+        <div class="header-eyebrow">LCC Web Viewer</div>
+        <h1 class="header-title">3D Scenes</h1>
+        <p class="header-sub">CSV에 등록된 LCC 장면 목록</p>
+    </div>
+
+    <div class="columns">
+        <div class="column">
+            <div class="column-header">
+                <span class="column-icon">🏠</span>
+                <span class="column-label">Interior / 실내</span>
+            </div>
+            <div class="scene-list" id="list-interior">
+                <div class="loading-msg">Loading...</div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="column-header">
+                <span class="column-icon">🏙</span>
+                <span class="column-label">Outdoor / 야외</span>
+            </div>
+            <div class="scene-list" id="list-outdoor">
+                <div class="loading-msg">Loading...</div>
+            </div>
         </div>
     </div>
-    <div id="error-overlay">3D 데이터를 불러오지 못했습니다.</div>
 
-    <!-- Top buttons -->
-    <div class="top-buttons">
-        <button class="ctrl-btn" id="btn-reset" title="리세ット / 초기 위치">RESET ↺</button>
-        <button class="ctrl-btn" id="btn-rotate" title="横向き / 가로 회전" style="display:none;">ROTATE ⤾</button>
+    <div class="custom-url-trigger">
+        <button class="custom-url-btn" id="open-modal" type="button">
+            🔗 URL 직접 입력
+        </button>
     </div>
 
-    <!-- Height slider -->
-    <div class="height-slider" id="height-slider">
-        <span class="height-slider-label">UP</span>
-        <div class="height-slider-track" id="height-track">
-            <div class="height-slider-rail"></div>
-            <div class="height-slider-baseline" id="height-baseline"></div>
-            <div class="height-slider-knob" id="height-knob"></div>
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modal">
+        <div class="modal">
+            <div class="modal-title">URL 직접 입력</div>
+            <div class="modal-sub">S3 또는 외부 .lcc 파일 주소를 입력하세요</div>
+            <form id="modal-form">
+                <input
+                    class="modal-input"
+                    id="modal-input"
+                    type="url"
+                    placeholder="https://...lcc"
+                    required
+                >
+                <div class="modal-actions">
+                    <button class="modal-cancel" type="button" id="modal-cancel">취소</button>
+                    <button class="modal-go" type="submit">VIEW →</button>
+                </div>
+            </form>
         </div>
-        <span class="height-slider-label">DN</span>
     </div>
 
-    <!-- Desktop hint (hidden on mobile) -->
-    <div class="desktop-hint" id="desktop-hint">
-        WASD 移動 · R/F 上下 · マウスドラッグで回転
+    <div class="footer-link">
+        <a href="./standalone-viewer/">Standalone PLY Viewer →</a>
     </div>
 
-    <!-- Mobile joysticks (hidden on desktop) -->
-    <div class="joystick left" id="joy-move" style="display:none;">
-        <div class="joystick-crosshair-h"></div>
-        <div class="joystick-crosshair-v"></div>
-        <div class="joystick-knob" id="joy-move-knob"></div>
-        <div class="joystick-label">MOVE</div>
-    </div>
-    <div class="joystick right" id="joy-look" style="display:none;">
-        <div class="joystick-crosshair-h"></div>
-        <div class="joystick-crosshair-v"></div>
-        <div class="joystick-knob" id="joy-look-knob"></div>
-        <div class="joystick-label">LOOK</div>
-    </div>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "./engine/three/three.module.js",
-                "three/addons/": "./engine/three/jsm/"
-            }
-        }
-    </script>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { FirstPersonControls } from './engine/three/FirstPersonControls.js';
-        import { LCCRender } from './sdk/lcc-0.5.5.js';
-
-        // ── Configuration ──
-        const DATA_PATH =
-            'https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/voidbox-hq-lcc/260408_voidbox.lcc';
-        const SPAWN = { x: -7.4328, y: 0.0777, z: -5.8466 };
-        const SPAWN_ROT = { x: -3.0675, y: -0.8655, z: -3.0851 };
-        const HEIGHT_RANGE = 3; // metres up/down from spawn
-        const LOOK_SPEED = 2.0; // rad/s at full joystick deflection
-        const PLAYER_RADIUS = 0.3;
-
-        // ── DOM refs ──
-        const $loading = document.getElementById('loading');
-        const $loadPct = document.getElementById('loading-percent');
-        const $loadFill = document.getElementById('loading-fill');
-        const $error = document.getElementById('error-overlay');
-        const $btnReset = document.getElementById('btn-reset');
-        const $btnRotate = document.getElementById('btn-rotate');
-        const $desktopHint = document.getElementById('desktop-hint');
-        const $joyMove = document.getElementById('joy-move');
-        const $joyLook = document.getElementById('joy-look');
-
-        // ── Touch / mobile detection ──
-        // Use pointer:coarse OR touch points to decide mobile controls.
-        // This does NOT flip when the phone rotates to landscape.
-        const isTouchDevice =
-            window.matchMedia('(pointer: coarse)').matches ||
-            navigator.maxTouchPoints > 0;
-
-        function applyLayout() {
-            if (isTouchDevice) {
-                $desktopHint.style.display = 'none';
-                $joyMove.style.display = '';
-                $joyLook.style.display = '';
-                $btnRotate.style.display = '';
-            } else {
-                $desktopHint.style.display = '';
-                $joyMove.style.display = 'none';
-                $joyLook.style.display = 'none';
-                $btnRotate.style.display = 'none';
-            }
-        }
-        applyLayout();
-
-        // ── Three.js setup ──
-        const scene = new THREE.Scene();
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setClearColor(0x000000);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-        renderer.domElement.style.position = 'fixed';
-        renderer.domElement.style.inset = '0';
-
-        const camera = new THREE.PerspectiveCamera(
-            50, window.innerWidth / window.innerHeight, 0.05, 150000,
-        );
-        camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
-        camera.rotation.set(SPAWN_ROT.x, SPAWN_ROT.y, SPAWN_ROT.z);
-
-        const initialQuaternion = camera.quaternion.clone();
-
-        const controls = new FirstPersonControls(camera, renderer.domElement);
-        controls.enabled = true;
-        controls.movementSpeed = 5;
-        controls.horizontalLock = true;
-
-        // ── Resize ──
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // ── Reset ──
-        $btnReset.addEventListener('click', () => {
-            camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
-            camera.quaternion.copy(initialQuaternion);
-            moveVec.x = 0; moveVec.y = 0;
-            lookVec.x = 0; lookVec.y = 0;
-            currentHeightY = SPAWN.y;
-            updateHeightKnob();
-        });
-
-        // ── Rotate (fullscreen + landscape lock) ──
-        $btnRotate.addEventListener('click', async () => {
-            try {
-                const el = document.documentElement;
-                const fsEl = document.fullscreenElement
-                    ?? document.webkitFullscreenElement;
-                if (!fsEl) {
-                    const reqFs = el.requestFullscreen?.bind(el)
-                        ?? el.webkitRequestFullscreen?.bind(el);
-                    if (reqFs) await reqFs();
-                }
-                const orientation = screen.orientation;
-                await orientation?.lock?.('landscape');
-            } catch (e) {
-                console.warn('[Viewer] landscape request failed', e);
-            }
-        });
-
-        // ── Height slider ──
-        const heightBounds = {
-            min: SPAWN.y - HEIGHT_RANGE,
-            max: SPAWN.y + HEIGHT_RANGE,
-        };
-        let currentHeightY = SPAWN.y;
-        const $hTrack = document.getElementById('height-track');
-        const $hKnob = document.getElementById('height-knob');
-        const $hBase = document.getElementById('height-baseline');
-
-        // Position baseline tick
-        const baseProgress = (SPAWN.y - heightBounds.min) / (heightBounds.max - heightBounds.min);
-        $hBase.style.bottom = `${baseProgress * 100}%`;
-
-        function updateHeightKnob() {
-            const p = (currentHeightY - heightBounds.min) / (heightBounds.max - heightBounds.min);
-            $hKnob.style.bottom = `${p * 100}%`;
-        }
-        updateHeightKnob();
-
-        let heightDragging = false;
-        function heightFromEvent(e) {
-            const rect = $hTrack.getBoundingClientRect();
-            const t = 1 - (e.clientY - rect.top) / rect.height;
-            const clamped = Math.max(0, Math.min(1, t));
-            currentHeightY = heightBounds.min + clamped * (heightBounds.max - heightBounds.min);
-            camera.position.y = currentHeightY;
-            updateHeightKnob();
+    <script>
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const header = lines[0].split(',').map(h => h.trim());
+            return lines.slice(1)
+                .map(line => {
+                    // S3 URL은 쉼표가 없다는 가정 하에 단순 split 사용.
+                    const parts = line.split(',').map(p => p.trim());
+                    const row = {};
+                    header.forEach((key, i) => {
+                        if (parts[i] !== undefined && parts[i] !== '') row[key] = parts[i];
+                    });
+                    return row;
+                })
+                .filter(r => r.name && r.url);
         }
 
-        $hTrack.addEventListener('pointerdown', (e) => {
-            heightDragging = true;
-            $hTrack.setPointerCapture(e.pointerId);
-            heightFromEvent(e);
-            e.stopPropagation();
-        });
-        $hTrack.addEventListener('pointermove', (e) => {
-            if (!heightDragging) return;
-            heightFromEvent(e);
-            e.stopPropagation();
-        });
-        $hTrack.addEventListener('pointerup', (e) => {
-            heightDragging = false;
-            e.stopPropagation();
-        });
-        $hTrack.addEventListener('pointercancel', () => {
-            heightDragging = false;
-        });
-
-        // ── Joystick logic ──
-        const moveVec = { x: 0, y: 0 };
-        const lookVec = { x: 0, y: 0 };
-
-        function setupJoystick(el, knobEl, output) {
-            let active = null; // { id, cx, cy, r }
-
-            el.addEventListener('pointerdown', (e) => {
-                const rect = el.getBoundingClientRect();
-                active = {
-                    id: e.pointerId,
-                    cx: rect.left + rect.width / 2,
-                    cy: rect.top + rect.height / 2,
-                    r: rect.width / 2,
-                };
-                el.setPointerCapture(e.pointerId);
-                el.classList.add('active');
-                handleMove(e);
-                e.stopPropagation();
+        function buildViewerHref(row) {
+            const qs = new URLSearchParams();
+            qs.set('data', row.url);
+            ['px', 'py', 'pz', 'yaw', 'pitch'].forEach(k => {
+                if (row[k]) qs.set(k, row[k]);
             });
-
-            function handleMove(e) {
-                if (!active || active.id !== e.pointerId) return;
-                let dx = e.clientX - active.cx;
-                let dy = e.clientY - active.cy;
-                const dist = Math.hypot(dx, dy);
-                if (dist > active.r) {
-                    dx = (dx * active.r) / dist;
-                    dy = (dy * active.r) / dist;
-                }
-                knobEl.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-                output.x = dx / active.r;
-                output.y = dy / active.r;
-                e.stopPropagation();
-            }
-
-            el.addEventListener('pointermove', handleMove);
-
-            function release(e) {
-                if (!active || active.id !== e.pointerId) return;
-                active = null;
-                el.classList.remove('active');
-                knobEl.style.transform = 'translate(-50%, -50%)';
-                output.x = 0;
-                output.y = 0;
-                e.stopPropagation();
-            }
-
-            el.addEventListener('pointerup', release);
-            el.addEventListener('pointercancel', release);
+            return `./viewer.html?${qs.toString()}`;
         }
 
-        setupJoystick($joyMove, document.getElementById('joy-move-knob'), moveVec);
-        setupJoystick($joyLook, document.getElementById('joy-look-knob'), lookVec);
-
-        // ── LCC load ──
-        const modelMatrix = new THREE.Matrix4(
-            -1, 0, 0, 0,
-             0, 0, 1, 0,
-             0, 1, 0, 0,
-             0, 0, 0, 1,
-        );
-
-        let collisionActive = false;
-
-        const lccObj = LCCRender.load(
-            {
-                camera,
-                scene,
-                dataPath: DATA_PATH,
-                renderLib: THREE,
-                canvas: renderer.domElement,
-                renderer,
-                useEnv: true,
-                useIndexDB: true,
-                useLoadingEffect: true,
-                modelMatrix,
-                appKey: null,
-            },
-            () => {
-                $loadPct.textContent = '100%';
-                $loadFill.style.width = '100%';
-                $loading.classList.add('hidden');
-                // Enable collision if available
-                if (typeof lccObj.hasCollision === 'function' && lccObj.hasCollision()) {
-                    collisionActive = true;
-                    console.info('[Viewer] collider active');
-                }
-            },
-            (percent) => {
-                const pct = Math.round(percent * 100);
-                $loadPct.textContent = `${pct}%`;
-                $loadFill.style.width = `${pct}%`;
-            },
-            () => {
-                $loading.classList.add('hidden');
-                $error.style.display = 'flex';
-            },
-        );
-
-        // ── Render loop ──
-        const clock = new THREE.Clock();
-        const _forward = new THREE.Vector3();
-        const _right = new THREE.Vector3();
-        const _qYaw = new THREE.Quaternion();
-        const _qPitch = new THREE.Quaternion();
-        const _yAxis = new THREE.Vector3(0, 1, 0);
-        const _xAxis = new THREE.Vector3(1, 0, 0);
-
-        function render() {
-            const delta = clock.getDelta();
-            if (controls.enabled) controls.update(delta);
-
-            // Mobile joystick: movement
-            if (moveVec.x !== 0 || moveVec.y !== 0) {
-                _forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
-                _forward.y = 0;
-                if (_forward.lengthSq() > 1e-6) _forward.normalize();
-                _right.set(1, 0, 0).applyQuaternion(camera.quaternion);
-                _right.y = 0;
-                if (_right.lengthSq() > 1e-6) _right.normalize();
-                const mult =
-                    typeof controls.effectiveSpeedMultiplier === 'function'
-                        ? controls.effectiveSpeedMultiplier()
-                        : 1;
-                const speed = controls.movementSpeed * mult * delta;
-                camera.position.addScaledVector(_forward, -moveVec.y * speed);
-                camera.position.addScaledVector(_right, moveVec.x * speed);
+        function renderList(container, rows) {
+            if (rows.length === 0) {
+                container.innerHTML = '<div class="empty-msg">등록된 장면이 없습니다</div>';
+                return;
             }
-
-            // Mobile joystick: look
-            if (lookVec.x !== 0 || lookVec.y !== 0) {
-                _qYaw.setFromAxisAngle(_yAxis, -lookVec.x * delta * LOOK_SPEED);
-                camera.quaternion.premultiply(_qYaw);
-                _qPitch.setFromAxisAngle(_xAxis, -lookVec.y * delta * LOOK_SPEED);
-                camera.quaternion.multiply(_qPitch);
-            }
-
-            // Collision
-            if (collisionActive) {
-                const res = lccObj.intersectsSphere({
-                    center: {
-                        x: camera.position.x,
-                        y: camera.position.y,
-                        z: camera.position.z,
-                    },
-                    radius: PLAYER_RADIUS,
-                });
-                if (res && res.hit && res.delta) {
-                    camera.position.x += res.delta.x;
-                    camera.position.z += res.delta.z;
-                }
-            }
-
-            LCCRender.update();
-            renderer.render(scene, camera);
+            container.innerHTML = rows.map((row, i) => {
+                const href = buildViewerHref(row);
+                const index = String(i + 1).padStart(2, '0');
+                return `<a class="scene-btn" href="${href}">
+                    <span class="scene-btn-name">
+                        <span class="scene-btn-index">${index}</span>
+                        <span class="scene-btn-label">${row.name}</span>
+                    </span>
+                    <span class="scene-btn-arrow">VIEW →</span>
+                </a>`;
+            }).join('');
         }
 
-        renderer.setAnimationLoop(render);
+        async function loadColumn(csvPath, containerId) {
+            const container = document.getElementById(containerId);
+            try {
+                const res = await fetch(csvPath);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const rows = parseCSV(await res.text());
+                renderList(container, rows);
+            } catch (err) {
+                console.error(`[Main] ${csvPath} 로드 실패:`, err);
+                container.innerHTML = `<div class="error-msg">${csvPath} 로드 실패</div>`;
+            }
+        }
+
+        loadColumn('./scenes.csv', 'list-interior');
+        loadColumn('./scenes-outdoor.csv', 'list-outdoor');
+
+        // Modal
+        const $modal = document.getElementById('modal');
+        const $modalInput = document.getElementById('modal-input');
+
+        document.getElementById('open-modal').addEventListener('click', () => {
+            $modal.classList.add('open');
+            setTimeout(() => $modalInput.focus(), 100);
+        });
+
+        function closeModal() {
+            $modal.classList.remove('open');
+            $modalInput.value = '';
+        }
+
+        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+
+        $modal.addEventListener('click', (e) => {
+            if (e.target === $modal) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && $modal.classList.contains('open')) closeModal();
+        });
+
+        document.getElementById('modal-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const url = $modalInput.value.trim();
+            if (url) {
+                location.href = `./viewer.html?data=${encodeURIComponent(url)}`;
+            }
+        });
     </script>
 </body>
 

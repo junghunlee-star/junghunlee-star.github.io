@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LCC Viewer</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ── Loading overlay ── */
+        #loading {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            color: rgba(255, 255, 255, 0.7);
+            transition: opacity 400ms ease;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #loading-eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        #loading-percent {
+            font-size: 24px;
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+        }
+
+        #loading-track {
+            width: 160px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #loading-fill {
+            height: 100%;
+            width: 0%;
+            background: #fff;
+            transition: width 200ms ease;
+        }
+
+        #error-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 14px;
+        }
+
+        /* ── Top-right button column ── */
+        .top-buttons {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .ctrl-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 11px;
+            letter-spacing: 0.22em;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: background 120ms, color 120ms;
+            backdrop-filter: blur(4px);
+        }
+
+        .ctrl-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* ── Debug HUD ── */
+        #debugHud {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 30;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            color: rgba(255, 255, 255, 0.85);
+            font: 500 11px/1.5 "SF Mono", "Consolas", "Menlo", monospace;
+            letter-spacing: 0.02em;
+            min-width: 180px;
+        }
+
+        .debug-row {
+            display: grid;
+            grid-template-columns: 64px 1fr;
+            gap: 8px;
+        }
+
+        .debug-key {
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .debug-val {
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ── Control guide ── */
+        #controlGuide {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            z-index: 30;
+            width: min(84vw, 44rem);
+            max-width: calc(100vw - 28px);
+            color: rgba(255, 255, 255, 0.95);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+                rgba(12, 16, 22, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.32);
+            backdrop-filter: blur(14px);
+            padding: 12px 14px;
+            transition: opacity 250ms ease, transform 300ms ease;
+        }
+
+        #controlGuide.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            pointer-events: none;
+        }
+
+        #controlGuideHint {
+            margin-top: 10px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        #controlGuideHeader {
+            text-align: center;
+        }
+
+        #controlGuideToggleLabel {
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        #controlGuideBody {
+            margin-top: 10px;
+        }
+
+        .guide-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .guide-grid.desktop {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .guide-grid.mobile {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .guide-item {
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .guide-item-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .guide-item-body {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 56px;
+        }
+
+        .guide-item-copy {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .keycap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .key-stack {
+            display: grid;
+            gap: 6px;
+        }
+
+        .key-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .slash {
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 14px;
+        }
+
+        .chip {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 13px;
+        }
+
+        .touch-disc {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .touch-disc::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            transform: translate(-50%, -50%);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+        }
+
+        .slider-icon {
+            width: 8px;
+            height: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .slider-icon::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 25%;
+            width: 14px;
+            height: 14px;
+            transform: translate(-50%, -50%);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 640px) {
+            #controlGuide {
+                width: auto;
+                left: 12px;
+                right: 12px;
+                bottom: calc(128px + 36px);
+                /* 조이스틱과 겹치지 않도록 위쪽으로 */
+                transform: none;
+                padding: 8px;
+            }
+
+            #controlGuide.hidden {
+                transform: translateY(20px);
+            }
+
+            .guide-grid.mobile {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 6px;
+            }
+
+            .guide-grid.mobile .guide-item {
+                padding: 8px 6px;
+            }
+
+            .guide-grid.mobile .guide-item-body {
+                min-height: 32px;
+                margin-top: 6px;
+            }
+
+            .guide-grid.mobile .guide-item-copy {
+                margin-top: 6px;
+                font-size: 11px;
+            }
+
+            .guide-grid.mobile .touch-disc {
+                width: 28px;
+                height: 28px;
+            }
+
+            .guide-grid.mobile .touch-disc::after {
+                width: 12px;
+                height: 12px;
+            }
+
+            .guide-grid.mobile .slider-icon {
+                height: 32px;
+                width: 6px;
+            }
+
+            #controlGuideHint {
+                margin-top: 6px;
+                font-size: 9px;
+            }
+        }
+
+        /* ── Height slider ── */
+        .height-slider {
+            position: fixed;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .height-slider-label {
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .height-slider-track {
+            position: relative;
+            width: 32px;
+            height: 160px;
+            cursor: ns-resize;
+        }
+
+        .height-slider-rail {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .height-slider-baseline {
+            position: absolute;
+            left: 50%;
+            width: 12px;
+            height: 1px;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .height-slider-knob {
+            position: absolute;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, 50%);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── Joystick ── */
+        .joystick {
+            position: fixed;
+            bottom: 24px;
+            z-index: 30;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            touch-action: none;
+            user-select: none;
+        }
+
+        .joystick.left {
+            left: 24px;
+        }
+
+        .joystick.right {
+            right: 24px;
+        }
+
+        .joystick-crosshair-h,
+        .joystick-crosshair-v {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+        }
+
+        .joystick-crosshair-h {
+            width: 24px;
+            height: 1px;
+            transform: translate(-50%, -50%);
+        }
+
+        .joystick-crosshair-v {
+            width: 1px;
+            height: 24px;
+            transform: translate(-50%, -50%);
+        }
+
+        .joystick-knob {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .joystick.active .joystick-knob {
+            transition: none;
+        }
+
+        .joystick-label {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            color: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading -->
+    <div id="loading">
+        <div id="loading-eyebrow">Loading 3D Space</div>
+        <div id="loading-percent">0%</div>
+        <div id="loading-track">
+            <div id="loading-fill"></div>
+        </div>
+    </div>
+    <div id="error-overlay">3D 데이터를 불러오지 못했습니다.</div>
+
+    <!-- Top buttons -->
+    <div class="top-buttons">
+        <a class="ctrl-btn" href="./" title="목록으로 돌아가기">← BACK</a>
+        <button class="ctrl-btn" id="btn-reset" title="리셋 / 초기 위치">RESET ↺</button>
+        <button class="ctrl-btn" id="btn-rotate" title="横向き / 가로 회전" style="display:none;">ROTATE ⤾</button>
+    </div>
+
+    <!-- Height slider -->
+    <div class="height-slider" id="height-slider">
+        <span class="height-slider-label">UP</span>
+        <div class="height-slider-track" id="height-track">
+            <div class="height-slider-rail"></div>
+            <div class="height-slider-baseline" id="height-baseline"></div>
+            <div class="height-slider-knob" id="height-knob"></div>
+        </div>
+        <span class="height-slider-label">DN</span>
+    </div>
+
+    <!-- Debug HUD -->
+    <div id="debugHud">
+        <div class="debug-row"><span class="debug-key">POS</span><span class="debug-val" id="dbg-pos">—</span></div>
+        <div class="debug-row"><span class="debug-key">YAW</span><span class="debug-val" id="dbg-yaw">—</span></div>
+        <div class="debug-row"><span class="debug-key">PITCH</span><span class="debug-val" id="dbg-pitch">—</span></div>
+    </div>
+
+    <!-- Control guide -->
+    <div id="controlGuide" aria-live="polite">
+        <div id="controlGuideHeader">
+            <span id="controlGuideToggleLabel">Controls</span>
+        </div>
+        <div id="controlGuideBody"></div>
+        <div id="controlGuideHint">아무데나 탭 / 클릭하면 사라집니다</div>
+    </div>
+
+    <!-- Mobile joysticks (hidden on desktop) -->
+    <div class="joystick left" id="joy-move" style="display:none;">
+        <div class="joystick-crosshair-h"></div>
+        <div class="joystick-crosshair-v"></div>
+        <div class="joystick-knob" id="joy-move-knob"></div>
+        <div class="joystick-label">MOVE</div>
+    </div>
+    <div class="joystick right" id="joy-look" style="display:none;">
+        <div class="joystick-crosshair-h"></div>
+        <div class="joystick-crosshair-v"></div>
+        <div class="joystick-knob" id="joy-look-knob"></div>
+        <div class="joystick-label">LOOK</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./engine/three/three.module.js",
+                "three/addons/": "./engine/three/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { FirstPersonControls } from './engine/three/FirstPersonControls.js';
+        import { LCCRender } from './sdk/lcc-0.5.5.js';
+
+        // ── Configuration ──
+        const params = new URLSearchParams(location.search);
+        const DATA_PATH = params.get('data')
+            || 'https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/voidbox-hq-lcc/260408_voidbox.lcc';
+
+        // Spawn 위치와 회전은 URL 파라미터(px, py, pz, yaw, pitch)로 오버라이드 가능.
+        // 없으면 기본값 사용. yaw/pitch는 도 단위(deg).
+        const DEFAULT_SPAWN = { x: -7.4328, y: 0.0777, z: -5.8466 };
+        const DEFAULT_ROT = { x: -3.0675, y: -0.8655, z: -3.0851 };
+        function paramNum(key) {
+            const v = params.get(key);
+            if (v === null) return null;
+            const n = parseFloat(v);
+            return Number.isFinite(n) ? n : null;
+        }
+        const SPAWN = {
+            x: paramNum('px') ?? DEFAULT_SPAWN.x,
+            y: paramNum('py') ?? DEFAULT_SPAWN.y,
+            z: paramNum('pz') ?? DEFAULT_SPAWN.z,
+        };
+        // yaw/pitch는 debug HUD가 YXZ Euler로 표시한 것과 동일한 규약.
+        const YAW_DEG = paramNum('yaw');
+        const PITCH_DEG = paramNum('pitch');
+        const HAS_EULER = YAW_DEG !== null || PITCH_DEG !== null;
+        console.info('[Viewer] URL params:', {
+            data: DATA_PATH, SPAWN, YAW_DEG, PITCH_DEG, HAS_EULER,
+        });
+
+        const HEIGHT_RANGE = 3; // metres up/down from spawn
+        const LOOK_SPEED = 2.0; // rad/s at full joystick deflection
+        const PLAYER_RADIUS = 0.3;
+        const DEG2RAD = Math.PI / 180;
+
+        // ── DOM refs ──
+        const $loading = document.getElementById('loading');
+        const $loadPct = document.getElementById('loading-percent');
+        const $loadFill = document.getElementById('loading-fill');
+        const $error = document.getElementById('error-overlay');
+        const $btnReset = document.getElementById('btn-reset');
+        const $btnRotate = document.getElementById('btn-rotate');
+        const $joyMove = document.getElementById('joy-move');
+        const $joyLook = document.getElementById('joy-look');
+        const $guide = document.getElementById('controlGuide');
+        const $guideBody = document.getElementById('controlGuideBody');
+        const $dbgPos = document.getElementById('dbg-pos');
+        const $dbgYaw = document.getElementById('dbg-yaw');
+        const $dbgPitch = document.getElementById('dbg-pitch');
+
+        // ── Touch / mobile detection ──
+        // Use pointer:coarse OR touch points to decide mobile controls.
+        // This does NOT flip when the phone rotates to landscape.
+        const isTouchDevice =
+            window.matchMedia('(pointer: coarse)').matches ||
+            navigator.maxTouchPoints > 0;
+
+        function renderGuide() {
+            if (isTouchDevice) {
+                $guideBody.innerHTML = `
+                    <div class="guide-grid mobile">
+                        <div class="guide-item">
+                            <div class="guide-item-title">Move</div>
+                            <div class="guide-item-body">
+                                <div class="touch-disc" aria-hidden="true"></div>
+                            </div>
+                            <div class="guide-item-copy">왼쪽 조이스틱</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-title">Look</div>
+                            <div class="guide-item-body">
+                                <div class="touch-disc" aria-hidden="true"></div>
+                            </div>
+                            <div class="guide-item-copy">오른쪽 조이스틱</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-title">Height</div>
+                            <div class="guide-item-body">
+                                <div class="slider-icon" aria-hidden="true"></div>
+                            </div>
+                            <div class="guide-item-copy">우측 슬라이더</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                $guideBody.innerHTML = `
+                    <div class="guide-grid desktop">
+                        <div class="guide-item">
+                            <div class="guide-item-title">Move / 이동</div>
+                            <div class="guide-item-body">
+                                <div class="key-stack">
+                                    <div class="key-row">
+                                        <span class="keycap">W</span>
+                                    </div>
+                                    <div class="key-row">
+                                        <span class="keycap">A</span>
+                                        <span class="keycap">S</span>
+                                        <span class="keycap">D</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="guide-item-copy">XZ 평면 이동</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-title">Height / 높이</div>
+                            <div class="guide-item-body">
+                                <span class="keycap">R</span>
+                                <span class="slash">/</span>
+                                <span class="keycap">F</span>
+                                <span class="slash">·</span>
+                                <div class="slider-icon" aria-hidden="true"></div>
+                            </div>
+                            <div class="guide-item-copy">위/아래 · 슬라이더</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-title">Look / 시점</div>
+                            <div class="guide-item-body">
+                                <div class="chip">Mouse Drag</div>
+                            </div>
+                            <div class="guide-item-copy">마우스 드래그</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function applyLayout() {
+            if (isTouchDevice) {
+                $joyMove.style.display = '';
+                $joyLook.style.display = '';
+                $btnRotate.style.display = '';
+            } else {
+                $joyMove.style.display = 'none';
+                $joyLook.style.display = 'none';
+                $btnRotate.style.display = 'none';
+            }
+            renderGuide();
+        }
+        applyLayout();
+
+        // 가이드는 첫 번째 탭/클릭에서 사라진다.
+        function hideGuide() {
+            $guide.classList.add('hidden');
+            window.removeEventListener('pointerdown', hideGuide);
+        }
+        window.addEventListener('pointerdown', hideGuide);
+
+        // ── Three.js setup ──
+        const scene = new THREE.Scene();
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearColor(0x000000);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        renderer.domElement.style.position = 'fixed';
+        renderer.domElement.style.inset = '0';
+
+        const camera = new THREE.PerspectiveCamera(
+            50, window.innerWidth / window.innerHeight, 0.05, 150000,
+        );
+        camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+        if (HAS_EULER) {
+            // debug HUD와 동일한 YXZ Euler 규약으로 yaw/pitch 복원.
+            const e = new THREE.Euler(
+                (PITCH_DEG ?? 0) * DEG2RAD,
+                (YAW_DEG ?? 0) * DEG2RAD,
+                0,
+                'YXZ',
+            );
+            camera.quaternion.setFromEuler(e);
+        } else {
+            camera.rotation.set(DEFAULT_ROT.x, DEFAULT_ROT.y, DEFAULT_ROT.z);
+        }
+
+        const initialQuaternion = camera.quaternion.clone();
+
+        const controls = new FirstPersonControls(camera, renderer.domElement);
+        controls.enabled = true;
+        controls.movementSpeed = 5;
+        controls.horizontalLock = true;
+
+        // ── Resize ──
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ── Reset ──
+        $btnReset.addEventListener('click', () => {
+            camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+            camera.quaternion.copy(initialQuaternion);
+            moveVec.x = 0; moveVec.y = 0;
+            lookVec.x = 0; lookVec.y = 0;
+            currentHeightY = SPAWN.y;
+            updateHeightKnob();
+        });
+
+        // ── Rotate (fullscreen + landscape lock) ──
+        $btnRotate.addEventListener('click', async () => {
+            try {
+                const el = document.documentElement;
+                const fsEl = document.fullscreenElement
+                    ?? document.webkitFullscreenElement;
+                if (!fsEl) {
+                    const reqFs = el.requestFullscreen?.bind(el)
+                        ?? el.webkitRequestFullscreen?.bind(el);
+                    if (reqFs) await reqFs();
+                }
+                const orientation = screen.orientation;
+                await orientation?.lock?.('landscape');
+            } catch (e) {
+                console.warn('[Viewer] landscape request failed', e);
+            }
+        });
+
+        // ── Height slider ──
+        const heightBounds = {
+            min: SPAWN.y - HEIGHT_RANGE,
+            max: SPAWN.y + HEIGHT_RANGE,
+        };
+        let currentHeightY = SPAWN.y;
+        const $hTrack = document.getElementById('height-track');
+        const $hKnob = document.getElementById('height-knob');
+        const $hBase = document.getElementById('height-baseline');
+
+        // Position baseline tick
+        const baseProgress = (SPAWN.y - heightBounds.min) / (heightBounds.max - heightBounds.min);
+        $hBase.style.bottom = `${baseProgress * 100}%`;
+
+        function updateHeightKnob() {
+            const p = (currentHeightY - heightBounds.min) / (heightBounds.max - heightBounds.min);
+            $hKnob.style.bottom = `${p * 100}%`;
+        }
+        updateHeightKnob();
+
+        let heightDragging = false;
+        function heightFromEvent(e) {
+            const rect = $hTrack.getBoundingClientRect();
+            const t = 1 - (e.clientY - rect.top) / rect.height;
+            const clamped = Math.max(0, Math.min(1, t));
+            currentHeightY = heightBounds.min + clamped * (heightBounds.max - heightBounds.min);
+            camera.position.y = currentHeightY;
+            updateHeightKnob();
+        }
+
+        $hTrack.addEventListener('pointerdown', (e) => {
+            heightDragging = true;
+            $hTrack.setPointerCapture(e.pointerId);
+            heightFromEvent(e);
+            e.stopPropagation();
+        });
+        $hTrack.addEventListener('pointermove', (e) => {
+            if (!heightDragging) return;
+            heightFromEvent(e);
+            e.stopPropagation();
+        });
+        $hTrack.addEventListener('pointerup', (e) => {
+            heightDragging = false;
+            e.stopPropagation();
+        });
+        $hTrack.addEventListener('pointercancel', () => {
+            heightDragging = false;
+        });
+
+        // ── Joystick logic ──
+        const moveVec = { x: 0, y: 0 };
+        const lookVec = { x: 0, y: 0 };
+
+        function setupJoystick(el, knobEl, output) {
+            let active = null; // { id, cx, cy, r }
+
+            el.addEventListener('pointerdown', (e) => {
+                const rect = el.getBoundingClientRect();
+                active = {
+                    id: e.pointerId,
+                    cx: rect.left + rect.width / 2,
+                    cy: rect.top + rect.height / 2,
+                    r: rect.width / 2,
+                };
+                el.setPointerCapture(e.pointerId);
+                el.classList.add('active');
+                handleMove(e);
+                e.stopPropagation();
+            });
+
+            function handleMove(e) {
+                if (!active || active.id !== e.pointerId) return;
+                let dx = e.clientX - active.cx;
+                let dy = e.clientY - active.cy;
+                const dist = Math.hypot(dx, dy);
+                if (dist > active.r) {
+                    dx = (dx * active.r) / dist;
+                    dy = (dy * active.r) / dist;
+                }
+                knobEl.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                output.x = dx / active.r;
+                output.y = dy / active.r;
+                e.stopPropagation();
+            }
+
+            el.addEventListener('pointermove', handleMove);
+
+            function release(e) {
+                if (!active || active.id !== e.pointerId) return;
+                active = null;
+                el.classList.remove('active');
+                knobEl.style.transform = 'translate(-50%, -50%)';
+                output.x = 0;
+                output.y = 0;
+                e.stopPropagation();
+            }
+
+            el.addEventListener('pointerup', release);
+            el.addEventListener('pointercancel', release);
+        }
+
+        setupJoystick($joyMove, document.getElementById('joy-move-knob'), moveVec);
+        setupJoystick($joyLook, document.getElementById('joy-look-knob'), lookVec);
+
+        // ── LCC load ──
+        const modelMatrix = new THREE.Matrix4(
+            -1, 0, 0, 0,
+             0, 0, 1, 0,
+             0, 1, 0, 0,
+             0, 0, 0, 1,
+        );
+
+        let collisionActive = false;
+
+        const lccObj = LCCRender.load(
+            {
+                camera,
+                scene,
+                dataPath: DATA_PATH,
+                renderLib: THREE,
+                canvas: renderer.domElement,
+                renderer,
+                useEnv: true,
+                useIndexDB: true,
+                useLoadingEffect: true,
+                modelMatrix,
+                appKey: null,
+            },
+            () => {
+                $loadPct.textContent = '100%';
+                $loadFill.style.width = '100%';
+                $loading.classList.add('hidden');
+                // Enable collision if available
+                if (typeof lccObj.hasCollision === 'function' && lccObj.hasCollision()) {
+                    collisionActive = true;
+                    console.info('[Viewer] collider active');
+                }
+            },
+            (percent) => {
+                const pct = Math.round(percent * 100);
+                $loadPct.textContent = `${pct}%`;
+                $loadFill.style.width = `${pct}%`;
+            },
+            () => {
+                $loading.classList.add('hidden');
+                $error.style.display = 'flex';
+            },
+        );
+
+        // ── Render loop ──
+        const clock = new THREE.Clock();
+        const _forward = new THREE.Vector3();
+        const _right = new THREE.Vector3();
+        const _qYaw = new THREE.Quaternion();
+        const _qPitch = new THREE.Quaternion();
+        const _yAxis = new THREE.Vector3(0, 1, 0);
+        const _xAxis = new THREE.Vector3(1, 0, 0);
+        const _euler = new THREE.Euler();
+        const RAD2DEG = 180 / Math.PI;
+
+        // Debug HUD는 매 프레임마다 갱신하면 DOM 오버헤드가 커지므로
+        // ~10Hz로 throttle.
+        let lastHudUpdate = 0;
+        function updateDebugHud(now) {
+            if (now - lastHudUpdate < 100) return;
+            lastHudUpdate = now;
+            const p = camera.position;
+            $dbgPos.textContent =
+                `${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`;
+            _euler.setFromQuaternion(camera.quaternion, 'YXZ');
+            // YXZ 순서에서 y=yaw, x=pitch, z=roll
+            $dbgYaw.textContent = `${(_euler.y * RAD2DEG).toFixed(1)}°`;
+            $dbgPitch.textContent = `${(_euler.x * RAD2DEG).toFixed(1)}°`;
+        }
+
+        function render() {
+            const delta = clock.getDelta();
+            if (controls.enabled) controls.update(delta);
+
+            // Mobile joystick: movement
+            if (moveVec.x !== 0 || moveVec.y !== 0) {
+                _forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
+                _forward.y = 0;
+                if (_forward.lengthSq() > 1e-6) _forward.normalize();
+                _right.set(1, 0, 0).applyQuaternion(camera.quaternion);
+                _right.y = 0;
+                if (_right.lengthSq() > 1e-6) _right.normalize();
+                const mult =
+                    typeof controls.effectiveSpeedMultiplier === 'function'
+                        ? controls.effectiveSpeedMultiplier()
+                        : 1;
+                const speed = controls.movementSpeed * mult * delta;
+                camera.position.addScaledVector(_forward, -moveVec.y * speed);
+                camera.position.addScaledVector(_right, moveVec.x * speed);
+            }
+
+            // Mobile joystick: look
+            if (lookVec.x !== 0 || lookVec.y !== 0) {
+                _qYaw.setFromAxisAngle(_yAxis, -lookVec.x * delta * LOOK_SPEED);
+                camera.quaternion.premultiply(_qYaw);
+                _qPitch.setFromAxisAngle(_xAxis, -lookVec.y * delta * LOOK_SPEED);
+                camera.quaternion.multiply(_qPitch);
+            }
+
+            // Collision
+            if (collisionActive) {
+                const res = lccObj.intersectsSphere({
+                    center: {
+                        x: camera.position.x,
+                        y: camera.position.y,
+                        z: camera.position.z,
+                    },
+                    radius: PLAYER_RADIUS,
+                });
+                if (res && res.hit && res.delta) {
+                    camera.position.x += res.delta.x;
+                    camera.position.z += res.delta.z;
+                }
+            }
+
+            LCCRender.update();
+            renderer.render(scene, camera);
+
+            updateDebugHud(performance.now());
+        }
+
+        renderer.setAnimationLoop(render);
+    </script>
+</body>
+
+</html>

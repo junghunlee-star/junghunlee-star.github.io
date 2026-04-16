@@ -3,6 +3,9 @@ import { MathUtils, Quaternion, Spherical, Vector2, Vector3, Euler } from 'three
 const _lookDirection = new Vector3()
 const _spherical = new Spherical()
 const _target = new Vector3()
+// Scratch vectors for the horizontal-lock movement path.
+const _forward = new Vector3()
+const _right = new Vector3()
 
 class FirstPersonControls {
   constructor(object, domElement) {
@@ -20,6 +23,21 @@ class FirstPersonControls {
 
     this.lookVertical = true
     this.autoForward = false
+
+    // When true, WASD movement is projected onto the world XZ plane so
+    // pitch (looking up/down) never changes the camera height. R/F
+    // still move vertically as an explicit override. Mirrors the
+    // "walk mode" feel of the PlayCanvas viewer in 05_test_viewer.
+    this.horizontalLock = false
+
+    // Speed tiers — 1..5 map to multipliers on `movementSpeed`. Tier 2
+    // is the default ("normal" speed). Shift adds a sprint multiplier
+    // on top while held. Applied in `update()` so joystick code in the
+    // viewer can read the same composed value via `effectiveSpeedMultiplier()`.
+    this.speedTiers = [0.3, 1, 2, 4, 8]
+    this.speedTier = 2
+    this.sprintFactor = 2
+    this.sprint = false
 
     this.activeLook = true
 
@@ -137,6 +155,32 @@ class FirstPersonControls {
         case 'KeyF':
           this.moveDown = true
           break
+
+        case 'Digit1':
+        case 'Numpad1':
+          this.speedTier = 1
+          break
+        case 'Digit2':
+        case 'Numpad2':
+          this.speedTier = 2
+          break
+        case 'Digit3':
+        case 'Numpad3':
+          this.speedTier = 3
+          break
+        case 'Digit4':
+        case 'Numpad4':
+          this.speedTier = 4
+          break
+        case 'Digit5':
+        case 'Numpad5':
+          this.speedTier = 5
+          break
+
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          this.sprint = true
+          break
       }
     }
 
@@ -168,7 +212,21 @@ class FirstPersonControls {
         case 'KeyF':
           this.moveDown = false
           break
+
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          this.sprint = false
+          break
       }
+    }
+
+    // Composed multiplier applied on top of `movementSpeed` each frame.
+    // Exposed so external input sources (mobile joystick in LccViewer)
+    // can pick up the same value.
+    this.effectiveSpeedMultiplier = function () {
+      const tier = this.speedTiers[this.speedTier - 1] ?? 1
+      const sprint = this.sprint ? this.sprintFactor : 1
+      return tier * sprint
     }
 
     this.lookAt = function (x, y, z) {
@@ -197,16 +255,42 @@ class FirstPersonControls {
           this.autoSpeedFactor = 0.0
         }
 
-        const actualMoveSpeed = delta * this.movementSpeed
+        const actualMoveSpeed = delta * this.movementSpeed * this.effectiveSpeedMultiplier()
 
-        if (this.moveForward || (this.autoForward && !this.moveBackward)) {
-          this.object.translateZ(-(actualMoveSpeed + this.autoSpeedFactor))
+        if (this.horizontalLock) {
+          // Derive world-space forward/right from the camera orientation,
+          // project onto the XZ plane, re-normalise. This way WASD only
+          // translates along the ground plane regardless of pitch — looking
+          // down at the floor while pressing W no longer flies through it.
+          _forward.set(0, 0, -1).applyQuaternion(this.object.quaternion)
+          _forward.y = 0
+          if (_forward.lengthSq() > 1e-6) _forward.normalize()
+          _right.set(1, 0, 0).applyQuaternion(this.object.quaternion)
+          _right.y = 0
+          if (_right.lengthSq() > 1e-6) _right.normalize()
+
+          if (this.moveForward || (this.autoForward && !this.moveBackward)) {
+            this.object.position.addScaledVector(
+              _forward,
+              actualMoveSpeed + this.autoSpeedFactor,
+            )
+          }
+          if (this.moveBackward) this.object.position.addScaledVector(_forward, -actualMoveSpeed)
+          if (this.moveLeft) this.object.position.addScaledVector(_right, -actualMoveSpeed)
+          if (this.moveRight) this.object.position.addScaledVector(_right, actualMoveSpeed)
+        } else {
+          // Legacy free-fly: forward = camera's local -Z, so pitch affects height.
+          if (this.moveForward || (this.autoForward && !this.moveBackward)) {
+            this.object.translateZ(-(actualMoveSpeed + this.autoSpeedFactor))
+          }
+          if (this.moveBackward) this.object.translateZ(actualMoveSpeed)
+
+          if (this.moveLeft) this.object.translateX(-actualMoveSpeed)
+          if (this.moveRight) this.object.translateX(actualMoveSpeed)
         }
-        if (this.moveBackward) this.object.translateZ(actualMoveSpeed)
 
-        if (this.moveLeft) this.object.translateX(-actualMoveSpeed)
-        if (this.moveRight) this.object.translateX(actualMoveSpeed)
-
+        // R/F always do an explicit world-Y shift so the user can still
+        // adjust height deliberately even in horizontalLock mode.
         if (this.moveUp) this.object.translateY(actualMoveSpeed)
         if (this.moveDown) this.object.translateY(-actualMoveSpeed)
 
