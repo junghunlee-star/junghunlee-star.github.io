@@ -1,2 +1,4 @@
 name,url,px,py,pz,yaw,pitch
+대림동 버스 정류장, https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/voidbox_hq_exterior/this_is_my_first_test.lcc,-1.63,0.08,0.23,-8.9,3.3 
 대림동 Voidbox 주변 거리,https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/daerim_alley/daerim_alley.lcc,-4.94,0.08,-12.69,8.0,2.5
+대림동 아파트, https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/daerim_apt_exterior/daerim_apt_exterior.lcc, -32.11, 0.08, -51.11, 13.1, 4
