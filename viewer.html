@@ -529,6 +529,355 @@
             color: rgba(255, 255, 255, 0.6);
             pointer-events: none;
         }
+
+        /* ── Drop overlay ── */
+        #drop-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            pointer-events: none;
+        }
+
+        #drop-overlay.active {
+            display: flex;
+        }
+
+        .drop-card {
+            padding: 28px 40px;
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .drop-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+        }
+
+        .drop-card-sub {
+            margin-top: 8px;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        /* ── Model list panel ── */
+        #model-panel {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 30;
+            min-width: 200px;
+            max-width: 280px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            color: rgba(255, 255, 255, 0.85);
+            font: 500 11px/1.4 "SF Mono", "Consolas", "Menlo", monospace;
+            display: none;
+        }
+
+        #model-panel.has-models {
+            display: block;
+        }
+
+        .model-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .model-panel-title {
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .mini-toggle {
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.55);
+            border-radius: 4px;
+            padding: 3px 7px;
+            font: 500 9px/1 "SF Mono", "Consolas", "Menlo", monospace;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 120ms, color 120ms, border-color 120ms;
+            flex-shrink: 0;
+        }
+
+        .mini-toggle:hover {
+            color: rgba(255, 255, 255, 0.85);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .mini-toggle[data-on="true"] {
+            background: rgba(120, 200, 255, 0.22);
+            border-color: rgba(120, 200, 255, 0.6);
+            color: #fff;
+        }
+
+        .model-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .model-row-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            transition: opacity 120ms;
+        }
+
+        .model-row[data-visible="false"] .model-row-name {
+            opacity: 0.35;
+            text-decoration: line-through;
+        }
+
+        .model-row[data-selected="true"] {
+            background: rgba(120, 200, 255, 0.12);
+            margin: 0 -6px;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+
+        /* ── Transform (gizmo) panel ── */
+        #transform-panel {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 31;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            color: rgba(255, 255, 255, 0.9);
+            font: 500 10px/1 "SF Mono", "Consolas", "Menlo", monospace;
+            letter-spacing: 0.15em;
+        }
+
+        #transform-panel.active {
+            display: inline-flex;
+        }
+
+        .tx-label {
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+
+        .tx-name {
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #fff;
+            font-size: 11px;
+            padding-right: 8px;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            margin-right: 2px;
+        }
+
+        .tx-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.65);
+            border-radius: 4px;
+            padding: 5px 9px;
+            font: inherit;
+            cursor: pointer;
+            transition: background 120ms, color 120ms, border-color 120ms;
+        }
+
+        .tx-btn:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tx-btn[data-on="true"] {
+            background: rgba(120, 200, 255, 0.22);
+            border-color: rgba(120, 200, 255, 0.6);
+            color: #fff;
+        }
+
+        .tx-btn.danger:hover {
+            background: rgba(255, 100, 100, 0.22);
+            border-color: rgba(255, 100, 100, 0.55);
+            color: #fff;
+        }
+
+        /* ── Annotation pins (3D 공간에 붙는 + 버튼) ── */
+        .anno-pin {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 28;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.85);
+            background: rgba(30, 120, 200, 0.9);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            /* transform 에는 transition 주지 않기 — 카메라 움직임마다 lag 보간되면 핀이 따라다니는 것처럼 보임 */
+            transition: background 120ms, box-shadow 120ms, border-color 120ms;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            will-change: transform;
+        }
+
+        .anno-pin:hover {
+            background: rgba(60, 160, 240, 1);
+            box-shadow: 0 6px 22px rgba(60, 160, 240, 0.5);
+        }
+
+        .anno-pin.hidden {
+            display: none;
+        }
+
+        /* 핀 추가 모드일 때 커서 표시 */
+        body.anno-placing canvas {
+            cursor: crosshair !important;
+        }
+
+        body.anno-placing .anno-pin {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* ── Annotation modal ── */
+        .anno-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 120;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+        }
+
+        .anno-modal-backdrop.open {
+            display: flex;
+        }
+
+        .anno-modal {
+            width: 90%;
+            max-width: 420px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 14px;
+            background: #141414;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .anno-modal-title {
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .anno-modal input.anno-input,
+        .anno-modal textarea.anno-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            resize: vertical;
+        }
+
+        .anno-modal textarea.anno-input {
+            min-height: 100px;
+        }
+
+        .anno-modal input.anno-input:focus,
+        .anno-modal textarea.anno-input:focus {
+            border-color: rgba(120, 200, 255, 0.6);
+        }
+
+        .anno-modal-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .anno-modal-actions .left,
+        .anno-modal-actions .right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .anno-modal button {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font: 500 11px/1 inherit;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.75);
+            transition: background 120ms, border-color 120ms, color 120ms;
+        }
+
+        .anno-modal button:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .anno-modal button.primary {
+            background: rgba(120, 200, 255, 0.25);
+            border-color: rgba(120, 200, 255, 0.6);
+            color: #fff;
+        }
+
+        .anno-modal button.primary:hover {
+            background: rgba(120, 200, 255, 0.4);
+        }
+
+        .anno-modal button.danger:hover {
+            background: rgba(255, 100, 100, 0.2);
+            border-color: rgba(255, 100, 100, 0.55);
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -547,18 +896,38 @@
     <div class="top-buttons">
         <a class="ctrl-btn" href="./" title="목록으로 돌아가기">← BACK</a>
         <button class="ctrl-btn" id="btn-reset" title="리셋 / 초기 위치">RESET ↺</button>
+        <button class="ctrl-btn" id="btn-annotate" title="객체에 + 주석 핀 추가">+ NOTE</button>
+        <button class="ctrl-btn" id="btn-annotate-invis" title="선택 메시를 숨기고 + 핀만 남기기">+ INV NOTE</button>
         <button class="ctrl-btn" id="btn-rotate" title="横向き / 가로 회전" style="display:none;">ROTATE ⤾</button>
     </div>
 
-    <!-- Height slider -->
+    <!-- Annotation modal -->
+    <div class="anno-modal-backdrop" id="anno-modal">
+        <div class="anno-modal">
+            <div class="anno-modal-title" id="anno-modal-label">Annotation</div>
+            <input class="anno-input" id="anno-title-input" type="text" placeholder="제목" maxlength="80" />
+            <textarea class="anno-input" id="anno-body-input" placeholder="내용 / 설명"></textarea>
+            <div class="anno-modal-actions">
+                <div class="left">
+                    <button id="anno-delete-btn" class="danger" type="button">Delete</button>
+                </div>
+                <div class="right">
+                    <button id="anno-cancel-btn" type="button">Cancel</button>
+                    <button id="anno-save-btn" class="primary" type="button">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clip slider (기존 height 슬라이더 재사용 — 씬 상단을 잘라내는 평면 높이) -->
     <div class="height-slider" id="height-slider">
-        <span class="height-slider-label">UP</span>
+        <span class="height-slider-label">CEIL</span>
         <div class="height-slider-track" id="height-track">
             <div class="height-slider-rail"></div>
             <div class="height-slider-baseline" id="height-baseline"></div>
             <div class="height-slider-knob" id="height-knob"></div>
         </div>
-        <span class="height-slider-label">DN</span>
+        <span class="height-slider-label">FLOOR</span>
     </div>
 
     <!-- Debug HUD -->
@@ -575,6 +944,34 @@
         </div>
         <div id="controlGuideBody"></div>
         <div id="controlGuideHint">아무데나 탭 / 클릭하면 사라집니다</div>
+    </div>
+
+    <!-- Drop overlay -->
+    <div id="drop-overlay">
+        <div class="drop-card">
+            <div class="drop-card-title">📦 OBJ / 3DM 파일 드롭</div>
+            <div class="drop-card-sub">Drop to load</div>
+        </div>
+    </div>
+
+    <!-- Model list panel -->
+    <div id="model-panel">
+        <div class="model-panel-header">
+            <span class="model-panel-title">Loaded Models</span>
+            <button class="mini-toggle" id="collider-toggle" type="button" data-on="false">Collider Off</button>
+        </div>
+        <div id="model-list"></div>
+    </div>
+
+    <!-- Transform (gizmo) panel -->
+    <div id="transform-panel">
+        <span class="tx-label">Selected</span>
+        <span class="tx-name" id="tx-name">—</span>
+        <button class="tx-btn" id="tx-translate" type="button" data-on="true" title="이동 (G)">Move</button>
+        <button class="tx-btn" id="tx-rotate" type="button" data-on="false" title="회전">Rotate</button>
+        <button class="tx-btn" id="tx-scale" type="button" data-on="false" title="스케일">Scale</button>
+        <button class="tx-btn danger" id="tx-delete" type="button" title="삭제">Delete</button>
+        <button class="tx-btn" id="tx-deselect" type="button" title="해제 (Esc)">✕</button>
     </div>
 
     <!-- Mobile joysticks (hidden on desktop) -->
@@ -603,6 +1000,9 @@
     <script type="module">
         import * as THREE from 'three';
         import { FirstPersonControls } from './engine/three/FirstPersonControls.js';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';
+        import { TransformControls } from 'three/addons/controls/TransformControls.js';
         import { LCCRender } from './sdk/lcc-0.5.5.js';
 
         // ── Configuration ──
@@ -760,6 +1160,10 @@
         renderer.domElement.style.position = 'fixed';
         renderer.domElement.style.inset = '0';
 
+        // ── Clipping: Gaussian Splat 만 클리핑 (메시는 영향 없음) ──
+        // LCC SDK의 lccObj.setClipPlane([nx, ny, nz], constant) API 사용.
+        // applyClipToSplat()은 Splat 로드 완료 후 정의/등록됨.
+
         const camera = new THREE.PerspectiveCamera(
             50, window.innerWidth / window.innerHeight, 0.05, 150000,
         );
@@ -800,8 +1204,10 @@
             camera.quaternion.copy(initialQuaternion);
             moveVec.x = 0; moveVec.y = 0;
             lookVec.x = 0; lookVec.y = 0;
-            currentHeightY = SPAWN.y;
-            updateHeightKnob();
+            // clip plane을 최상단으로 복구 (아무것도 클리핑 안 된 상태)
+            currentClipY = clipBounds.max;
+            applyClipToSplat();
+            updateClipKnob();
         });
 
         // ── Rotate (fullscreen + landscape lock) ──
@@ -822,53 +1228,98 @@
             }
         });
 
-        // ── Height slider ──
-        const heightBounds = {
-            min: SPAWN.y - HEIGHT_RANGE,
-            max: SPAWN.y + HEIGHT_RANGE,
-        };
-        let currentHeightY = SPAWN.y;
+        // ── Clip slider ──
+        // 슬라이더 위치 → 씬의 수평 clip plane y 좌표.
+        // 슬라이더가 제일 위(100%) = 평면이 씬 최상단보다 위 = 아무것도 클리핑 안 됨
+        // 슬라이더가 제일 아래(0%) = 평면이 씬 최하단보다 아래 = 전부 클리핑
+        // Splat의 기본 bbox y-range(≈ -3 ~ 5)를 감싸는 범위로 설정.
+        const CLIP_MIN_Y = SPAWN.y - 3;
+        const CLIP_MAX_Y = SPAWN.y + 5;
+        const clipBounds = { min: CLIP_MIN_Y, max: CLIP_MAX_Y };
+        let currentClipY = CLIP_MAX_Y; // 시작: 완전 노출
+        let splatReady = false;
+
+        // 슬라이더 값 → LCC Splat 3D 공간 클리핑 (setClipBox).
+        //
+        // setClipPlane 은 NDC(화면) 공간이라 "가리개" 처럼 보여서 못 씀.
+        // setClipBox 는 oriented box 기반 3D 클리핑:
+        //   shader: localPos = (clipBoxMatrixInv * pos).xyz;  box = [-0.5, 0.5]^3
+        //   clipSide = 1 → box 안쪽만 남김 (바깥 clip)
+        //   clipSide = -1 → box 바깥만 남김 (안쪽 clip)
+        //
+        // 전략: "바닥 ~ 현재 clipY" 를 덮는 큰 박스를 만든다.
+        //  slider 최상단: 박스 높이가 최대 → 씬 전체 포함 → 아무것도 안 잘림
+        //  slider 내려옴: 박스 height 줄어듦 → 위쪽 splat 바깥으로 밀려나 → 천장부터 clip
+        //
+        // 위의 modelMatrix (world Y ≡ raw Z) 를 고려:
+        //  - LCC shader 는 splat 의 raw 좌표계에서 pos 를 받을 가능성 있음.
+        //    그 경우 박스 "height" 축은 raw Z.
+        //  - 아니면 world 좌표계. 일단 world 기준으로 넣고 필요하면 축 교체.
+        const CLIP_BOX_FLOOR_Y = clipBounds.min - 2; // 바닥 여유
+
+        function applyClipToSplat() {
+            if (!splatReady || typeof lccObj.setClipBox !== 'function') return;
+            if (currentClipY >= clipBounds.max - 0.001) {
+                lccObj.setClipBox(null); // 비활성화
+                return;
+            }
+            const floorY = CLIP_BOX_FLOOR_Y;
+            const topY = currentClipY;
+            const height = Math.max(0.001, topY - floorY);
+            const center = (floorY + topY) / 2;
+            // LCC shader 는 splat 의 raw 좌표계를 사용하고,
+            // viewer 의 modelMatrix 가 world_Y ≡ raw_Z 이므로
+            // 수직축(박스 height)은 raw Z 방향이어야 함 (scale.z 에 할당).
+            // position 의 "수직 위치" 도 raw Z 축 → position.z 에.
+            lccObj.setClipBox({
+                position: { x: 0, y: 0, z: center },
+                rotation: { x: 0, y: 0, z: 0 },
+                scale: { x: 60, y: 60, z: height },
+                clipSide: 1, // box 안쪽만 keep → 바깥(위쪽) clip
+            });
+        }
+
         const $hTrack = document.getElementById('height-track');
         const $hKnob = document.getElementById('height-knob');
         const $hBase = document.getElementById('height-baseline');
 
-        // Position baseline tick
-        const baseProgress = (SPAWN.y - heightBounds.min) / (heightBounds.max - heightBounds.min);
+        // baseline tick은 "눈높이"(SPAWN.y) 참고선
+        const baseProgress = (SPAWN.y - clipBounds.min) / (clipBounds.max - clipBounds.min);
         $hBase.style.bottom = `${baseProgress * 100}%`;
 
-        function updateHeightKnob() {
-            const p = (currentHeightY - heightBounds.min) / (heightBounds.max - heightBounds.min);
+        function updateClipKnob() {
+            const p = (currentClipY - clipBounds.min) / (clipBounds.max - clipBounds.min);
             $hKnob.style.bottom = `${p * 100}%`;
         }
-        updateHeightKnob();
+        updateClipKnob();
 
-        let heightDragging = false;
-        function heightFromEvent(e) {
+        let clipDragging = false;
+        function clipFromEvent(e) {
             const rect = $hTrack.getBoundingClientRect();
             const t = 1 - (e.clientY - rect.top) / rect.height;
             const clamped = Math.max(0, Math.min(1, t));
-            currentHeightY = heightBounds.min + clamped * (heightBounds.max - heightBounds.min);
-            camera.position.y = currentHeightY;
-            updateHeightKnob();
+            currentClipY = clipBounds.min + clamped * (clipBounds.max - clipBounds.min);
+            applyClipToSplat();
+            updateClipKnob();
         }
 
         $hTrack.addEventListener('pointerdown', (e) => {
-            heightDragging = true;
+            clipDragging = true;
             $hTrack.setPointerCapture(e.pointerId);
-            heightFromEvent(e);
+            clipFromEvent(e);
             e.stopPropagation();
         });
         $hTrack.addEventListener('pointermove', (e) => {
-            if (!heightDragging) return;
-            heightFromEvent(e);
+            if (!clipDragging) return;
+            clipFromEvent(e);
             e.stopPropagation();
         });
         $hTrack.addEventListener('pointerup', (e) => {
-            heightDragging = false;
+            clipDragging = false;
             e.stopPropagation();
         });
         $hTrack.addEventListener('pointercancel', () => {
-            heightDragging = false;
+            clipDragging = false;
         });
 
         // ── Joystick logic ──
@@ -965,6 +1416,10 @@
                     collisionActive = true;
                     console.info('[Viewer] collider active');
                 }
+                // Splat 로드 완료 → 클리핑 적용 가능
+                splatReady = true;
+                applyClipToSplat();
+                console.info('[Viewer] splat clipping API ready (setClipPlane)');
             },
             (percent) => {
                 const pct = Math.round(percent * 100);
@@ -976,6 +1431,813 @@
                 $error.style.display = 'flex';
             },
         );
+
+        // ── OBJ drag & drop ──
+        // Splat과 동일한 modelMatrix(축 flip)를 OBJ에도 적용해
+        // 같은 좌표계에서 보이도록 한다.
+        const objGroup = new THREE.Group();
+        objGroup.applyMatrix4(modelMatrix);
+        scene.add(objGroup);
+
+        const objLoader = new OBJLoader();
+
+        // Rhino3dmLoader는 rhino3dm.wasm 라이브러리가 필요.
+        // jsdelivr CDN에서 받아옴. 오프라인 사용이 필요하면
+        // rhino3dm.js / rhino3dm.wasm 을 로컬에 두고 경로 교체하면 됨.
+        const rhinoLoader = new Rhino3dmLoader();
+        rhinoLoader.setLibraryPath('https://cdn.jsdelivr.net/npm/rhino3dm@8.4.0/');
+
+        const loadedModels = []; // { id, name, object }
+        let modelIdSeq = 0;
+
+        const $dropOverlay = document.getElementById('drop-overlay');
+        const $modelPanel = document.getElementById('model-panel');
+        const $modelList = document.getElementById('model-list');
+        const $colliderToggle = document.getElementById('collider-toggle');
+
+        // 메시 콜라이더 on/off 상태 (기본 off)
+        const meshColliderState = { enabled: false };
+
+        $colliderToggle.addEventListener('click', () => {
+            meshColliderState.enabled = !meshColliderState.enabled;
+            $colliderToggle.dataset.on = String(meshColliderState.enabled);
+            $colliderToggle.textContent =
+                meshColliderState.enabled ? 'Collider On' : 'Collider Off';
+        });
+
+        function renderModelList() {
+            if (loadedModels.length === 0) {
+                $modelPanel.classList.remove('has-models');
+                $modelList.innerHTML = '';
+                return;
+            }
+            $modelPanel.classList.add('has-models');
+            $modelList.innerHTML = loadedModels.map(m => `
+                <div class="model-row" data-id="${m.id}" data-visible="${m.visible}" data-selected="${m.id === selectedRootId}">
+                    <button class="mini-toggle model-row-vis" type="button" data-on="${m.visible}">${m.visible ? 'Shown' : 'Hidden'}</button>
+                    <span class="model-row-name" title="${m.name}">${m.name}</span>
+                </div>
+            `).join('');
+            $modelList.querySelectorAll('.model-row-vis').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = Number(e.target.closest('.model-row').dataset.id);
+                    toggleModelVisibility(id);
+                });
+            });
+        }
+
+        function toggleModelVisibility(id) {
+            const m = loadedModels.find(x => x.id === id);
+            if (!m) return;
+            m.visible = !m.visible;
+            m.object.visible = m.visible;
+            renderModelList();
+        }
+
+        // mesh의 pivot을 geometry bbox 중심으로 옮겨서 gizmo가 메시 중앙에 뜨게.
+        // 비주얼은 유지 (geometry를 -center만큼 이동 + mesh.position을 +center만큼 보정)
+        function recenterMeshPivot(mesh) {
+            if (mesh.userData._pivotCentered) return;
+            if (!mesh.geometry) return;
+            mesh.geometry.computeBoundingBox();
+            const bbox = mesh.geometry.boundingBox;
+            if (!bbox) return;
+            const c = new THREE.Vector3();
+            bbox.getCenter(c);
+            if (c.lengthSq() < 1e-12) {
+                mesh.userData._pivotCentered = true;
+                return;
+            }
+            mesh.geometry.translate(-c.x, -c.y, -c.z);
+            mesh.geometry.computeBoundingBox();
+            mesh.geometry.computeBoundingSphere();
+            // mesh의 local scale/rotation을 반영한 부모공간 offset
+            const offset = c.clone().multiply(mesh.scale);
+            offset.applyQuaternion(mesh.quaternion);
+            mesh.position.add(offset);
+            mesh.updateMatrixWorld(true);
+            mesh.userData._pivotCentered = true;
+        }
+
+        function addLoadedObject(object, name) {
+            // 기본 material이 없거나 단색인 경우 구분을 위해 약한 색 부여
+            // 각 mesh의 pivot을 bbox 중심으로 이동 (gizmo 위치 정렬용)
+            object.traverse((child) => {
+                if (child.isMesh && !child.material) {
+                    child.material = new THREE.MeshStandardMaterial({
+                        color: 0xcccccc,
+                        metalness: 0.0,
+                        roughness: 0.9,
+                    });
+                }
+                if (child.isMesh) recenterMeshPivot(child);
+            });
+            objGroup.add(object);
+            const id = ++modelIdSeq;
+            loadedModels.push({ id, name, object, visible: true });
+            renderModelList();
+            console.info(`[Viewer] loaded: ${name}`, object);
+        }
+
+        function loadObjFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const obj = objLoader.parse(e.target.result);
+                    addLoadedObject(obj, file.name);
+                } catch (err) {
+                    console.error('[Viewer] OBJ parse failed:', err);
+                    alert(`OBJ 파싱 실패: ${file.name}\n${err.message}`);
+                }
+            };
+            reader.onerror = () => console.error('[Viewer] read failed:', file.name);
+            reader.readAsText(file);
+        }
+
+        function load3dmFile(file) {
+            console.info(`[Viewer] 3DM load start: ${file.name} (${file.size} bytes)`);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const buffer = e.target.result;
+                console.info(`[Viewer] 3DM file read → ArrayBuffer(${buffer.byteLength}), calling parse...`);
+                try {
+                    rhinoLoader.parse(
+                        buffer,
+                        (object) => {
+                            // 3DM 파싱 결과 진단: mesh / curve / 기타 개수와 bbox 출력.
+                            // Rhino 파일이 NURBS만 있고 render mesh가 없으면 mesh 0.
+                            let meshCount = 0, lineCount = 0, pointsCount = 0, otherCount = 0;
+                            object.traverse((c) => {
+                                if (c.isMesh) meshCount++;
+                                else if (c.isLine) lineCount++;
+                                else if (c.isPoints) pointsCount++;
+                                else if (c !== object && !c.isGroup) otherCount++;
+                            });
+                            const bbox = new THREE.Box3().setFromObject(object);
+                            console.info(`[Viewer] 3DM parse success: ${file.name}`, {
+                                totalChildren: object.children.length,
+                                meshCount, lineCount, pointsCount, otherCount,
+                                bboxMin: bbox.min.toArray().map(v => +v.toFixed(3)),
+                                bboxMax: bbox.max.toArray().map(v => +v.toFixed(3)),
+                                bboxEmpty: bbox.isEmpty(),
+                                warnings: object.userData?.warnings?.length || 0,
+                            });
+                            if (meshCount === 0 && lineCount === 0 && pointsCount === 0) {
+                                alert(
+                                    `3DM 파일이 로드됐지만 렌더링할 지오메트리가 없습니다: ${file.name}\n\n` +
+                                    `원인 후보:\n` +
+                                    `• Rhino에서 NURBS만 있고 render mesh 미저장\n` +
+                                    `  → File > Save As > Options > "Save render meshes" 체크\n` +
+                                    `• 또는 Rhino에서 _Mesh 명령으로 메시화 후 저장\n` +
+                                    `• 블록 인스턴스만 있는 경우\n\n` +
+                                    `콘솔 로그의 warnings 개수를 확인하세요.`
+                                );
+                            }
+                            addLoadedObject(object, file.name);
+                        },
+                        (err) => {
+                            console.error('[Viewer] 3DM parse failed (onError):', err);
+                            alert(
+                                `3DM 파싱 실패: ${file.name}\n` +
+                                `${err?.message || err}\n\n` +
+                                `(개발자 도구 콘솔에서 자세한 에러를 확인하세요)`
+                            );
+                        },
+                    );
+                } catch (err) {
+                    console.error('[Viewer] 3DM parse threw sync:', err);
+                    alert(
+                        `3DM 로딩 오류 (동기): ${file.name}\n` +
+                        `${err?.message || err}`
+                    );
+                }
+            };
+            reader.onerror = (e) => {
+                console.error('[Viewer] FileReader error:', e);
+                alert(`파일 읽기 실패: ${file.name}`);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 첫 3DM 로드 시점에 라이브러리를 처음 받으면 몇 초 지연되어 사용자에게
+        // "멈췄나?" 보일 수 있음. 페이지 로드 직후 미리 warm-up 해서 CDN 접근성도
+        // 이 시점에 알 수 있게 한다.
+        (async () => {
+            try {
+                await rhinoLoader._initLibrary();
+                console.info('[Viewer] rhino3dm library initialized (pre-warm OK)');
+            } catch (err) {
+                console.error('[Viewer] rhino3dm library init FAILED:', err);
+                console.error('  → check: jsdelivr CDN reachable? offline? adblock?');
+                // 이건 조용히 두고, 실제 드롭 시점에 에러로 다시 뜸
+            }
+        })();
+
+        function handleFiles(fileList) {
+            const files = Array.from(fileList);
+            let matched = 0;
+            files.forEach((file) => {
+                if (/\.obj$/i.test(file.name)) {
+                    loadObjFile(file);
+                    matched++;
+                } else if (/\.3dm$/i.test(file.name)) {
+                    load3dmFile(file);
+                    matched++;
+                }
+            });
+            if (matched === 0) {
+                console.warn('[Viewer] no supported files in drop (expected .obj / .3dm)');
+            }
+        }
+
+        // Drag events on window
+        let dragDepth = 0;
+        window.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dragDepth++;
+            $dropOverlay.classList.add('active');
+        });
+        window.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        });
+        window.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dragDepth = Math.max(0, dragDepth - 1);
+            if (dragDepth === 0) $dropOverlay.classList.remove('active');
+        });
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragDepth = 0;
+            $dropOverlay.classList.remove('active');
+            if (e.dataTransfer?.files?.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        // 메시에 음영(입체감)이 생기도록 라이팅 구성.
+        // - Ambient: 약하게 → 그림자 영역이 완전 검정이 되지 않게 최소 밝기
+        // - Hemisphere: 하늘/땅 컬러 차이로 위/아래 톤 분리
+        // - Directional: 주광 — 사선 각도로 쏴서 면마다 밝기 차이 발생 (음영의 핵심)
+        // Gaussian Splat은 이 조명에 영향받지 않음 (자체 색상 사용).
+        scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+        const hemi = new THREE.HemisphereLight(0xbcd7ff, 0x443322, 0.55);
+        hemi.position.set(0, 1, 0);
+        scene.add(hemi);
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
+        // 오른쪽 위 사선에서 비추기 — 세 축에 각각 다른 밝기가 잡혀 음영이 명확해짐
+        keyLight.position.set(8, 14, 6);
+        keyLight.target.position.set(0, 0, 0);
+        scene.add(keyLight);
+        scene.add(keyLight.target);
+
+        // 반대편에서 약하게 채우는 fill light — 그림자 영역이 너무 어둡지 않게
+        const fillLight = new THREE.DirectionalLight(0xa8c8ff, 0.35);
+        fillLight.position.set(-6, 4, -4);
+        scene.add(fillLight);
+
+        // ── Transform gizmo (선택 + 이동/회전/스케일) ──
+        // 클릭 시 drag가 아닌 순수 click만 "선택"으로 간주. drag은 기존 FPS look을 침범하지 않도록.
+        const transformControls = new TransformControls(camera, renderer.domElement);
+        transformControls.setSize(0.8);
+        scene.add(transformControls);
+
+        // gizmo 드래그 동안 FPS controls / 내부 look 벡터 비활성화.
+        let gizmoDragging = false;
+        transformControls.addEventListener('dragging-changed', (ev) => {
+            gizmoDragging = ev.value;
+            if (ev.value) {
+                controls.enabled = false;
+                // 드래그 시작 시점에 남아있는 조이스틱/키 입력 중립화
+                moveVec.x = 0; moveVec.y = 0;
+                lookVec.x = 0; lookVec.y = 0;
+            } else {
+                controls.enabled = true; // 원래대로
+            }
+        });
+
+        // 선택 대상은 개별 mesh(leaf)가 기본. Alt/Shift+Click 시 root 모델 전체.
+        // selectedObject: 현재 gizmo에 붙은 Object3D (root 또는 sub-mesh)
+        // selectedRootId: UI 하이라이트용 — 해당 object가 속한 loadedModel.id
+        let selectedObject = null;
+        let selectedRootId = null;
+
+        const $txPanel = document.getElementById('transform-panel');
+        const $txName = document.getElementById('tx-name');
+        const $txTranslate = document.getElementById('tx-translate');
+        const $txRotate = document.getElementById('tx-rotate');
+        const $txScale = document.getElementById('tx-scale');
+        const $txDelete = document.getElementById('tx-delete');
+        const $txDeselect = document.getElementById('tx-deselect');
+
+        function setGizmoMode(mode) {
+            transformControls.setMode(mode);
+            $txTranslate.dataset.on = String(mode === 'translate');
+            $txRotate.dataset.on = String(mode === 'rotate');
+            $txScale.dataset.on = String(mode === 'scale');
+        }
+
+        // object 또는 그 조상 중 loadedModels에 등록된 root를 찾음
+        function findRootModelOf(obj) {
+            let cur = obj;
+            while (cur) {
+                const m = loadedModels.find(x => x.object === cur);
+                if (m) return m;
+                cur = cur.parent;
+            }
+            return null;
+        }
+
+        // 선택 하이라이트: 메시의 EdgesGeometry를 뽑아 LineSegments로 덧붙임.
+        // 메시의 자식으로 추가하기 때문에 gizmo로 움직여도 자동으로 따라옴.
+        // depthTest: false 로 메시 내부/뒷면에서도 보이게.
+        const SELECTION_COLOR = 0x78c8ff;
+        const EDGE_ANGLE_THR = 15; // 각도 이상일 때만 edge로 간주
+
+        function applyHighlight(obj) {
+            obj.traverse((c) => {
+                if (c.isMesh && !c.userData._highlightEdge) {
+                    const edges = new THREE.EdgesGeometry(c.geometry, EDGE_ANGLE_THR);
+                    const mat = new THREE.LineBasicMaterial({
+                        color: SELECTION_COLOR,
+                        depthTest: false,
+                        transparent: true,
+                        opacity: 0.9,
+                    });
+                    const line = new THREE.LineSegments(edges, mat);
+                    line.renderOrder = 999;
+                    line.userData._isHighlight = true;
+                    c.add(line);
+                    c.userData._highlightEdge = line;
+                }
+            });
+        }
+
+        function removeHighlight(obj) {
+            obj.traverse((c) => {
+                if (c.userData._highlightEdge) {
+                    const line = c.userData._highlightEdge;
+                    c.remove(line);
+                    line.geometry.dispose();
+                    line.material.dispose();
+                    delete c.userData._highlightEdge;
+                }
+            });
+        }
+
+        function selectObject(obj) {
+            if (!obj) return;
+            // 이전 선택 하이라이트 제거
+            if (selectedObject) removeHighlight(selectedObject);
+            selectedObject = obj;
+            const root = findRootModelOf(obj);
+            selectedRootId = root ? root.id : null;
+            transformControls.attach(obj);
+            $txPanel.classList.add('active');
+            // 표시 이름: 루트면 파일명, 하위면 "파일명 › 메시명"
+            const subName = obj.name && obj.name.trim() ? obj.name : '(unnamed)';
+            if (root && obj === root.object) {
+                $txName.textContent = root.name;
+                $txName.title = root.name;
+            } else if (root) {
+                const label = `${root.name} › ${subName}`;
+                $txName.textContent = label;
+                $txName.title = label;
+            } else {
+                $txName.textContent = subName;
+                $txName.title = subName;
+            }
+            setGizmoMode(transformControls.mode || 'translate');
+            applyHighlight(obj);
+            renderModelList(); // 선택 하이라이트 갱신
+            console.info(`[Viewer] selected:`, obj.name || '(unnamed)',
+                'root:', root?.name);
+        }
+
+        function deselectObject() {
+            if (!selectedObject) return;
+            removeHighlight(selectedObject);
+            transformControls.detach();
+            selectedObject = null;
+            selectedRootId = null;
+            $txPanel.classList.remove('active');
+            renderModelList();
+        }
+
+        function disposeObject3D(obj) {
+            obj.traverse((c) => {
+                if (c.isMesh) {
+                    c.geometry?.dispose();
+                    if (Array.isArray(c.material)) {
+                        c.material.forEach(mm => mm.dispose());
+                    } else {
+                        c.material?.dispose();
+                    }
+                }
+            });
+        }
+
+        function deleteSelected() {
+            if (!selectedObject) return;
+            const obj = selectedObject;
+            const root = findRootModelOf(obj);
+            deselectObject();
+
+            // 이 객체(또는 그 자식) 에 붙어있던 annotation 핀들 DOM/목록에서 정리
+            if (typeof cleanupAnnotationsFor === 'function') {
+                cleanupAnnotationsFor(obj);
+            }
+
+            if (root && obj === root.object) {
+                // Root 전체 삭제 → loadedModels에서도 제거
+                const idx = loadedModels.findIndex(m => m.id === root.id);
+                objGroup.remove(obj);
+                disposeObject3D(obj);
+                if (idx >= 0) loadedModels.splice(idx, 1);
+            } else {
+                // Sub-mesh만 삭제 → 부모에서 제거 (loadedModels 엔트리는 유지)
+                obj.parent?.remove(obj);
+                disposeObject3D(obj);
+            }
+            renderModelList();
+        }
+
+        $txTranslate.addEventListener('click', () => setGizmoMode('translate'));
+        $txRotate.addEventListener('click', () => setGizmoMode('rotate'));
+        $txScale.addEventListener('click', () => setGizmoMode('scale'));
+        $txDelete.addEventListener('click', deleteSelected);
+        $txDeselect.addEventListener('click', deselectObject);
+
+        // ── 클릭 vs 드래그 구분해서 선택 처리 ──
+        // renderer.domElement에서 pointerdown 시 위치/시간 기록 →
+        // pointerup 시 이동 거리 작고 시간 짧으면 click → raycast.
+        const CLICK_PIX_THR = 6;
+        const CLICK_MS_THR = 300;
+        let pDownX = 0, pDownY = 0, pDownT = 0, pDownBtn = -1;
+        const _selectRaycaster = new THREE.Raycaster();
+        const _ndc = new THREE.Vector2();
+
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            if (gizmoDragging) return;
+            pDownX = e.clientX; pDownY = e.clientY;
+            pDownT = performance.now();
+            pDownBtn = e.button;
+        }, { passive: true });
+
+        renderer.domElement.addEventListener('pointerup', (e) => {
+            if (gizmoDragging) return;
+            if (pDownBtn !== 0) return; // 좌클릭만
+            const dx = e.clientX - pDownX;
+            const dy = e.clientY - pDownY;
+            const dt = performance.now() - pDownT;
+            if (Math.hypot(dx, dy) > CLICK_PIX_THR || dt > CLICK_MS_THR) return;
+
+            // click → raycast
+            const rect = renderer.domElement.getBoundingClientRect();
+            _ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            _ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            _selectRaycaster.setFromCamera(_ndc, camera);
+
+            // 각 로드된 모델의 모든 mesh 수집 + 어떤 모델에 속하는지 역매핑
+            const meshes = [];
+            const meshToModelId = new Map();
+            for (const m of loadedModels) {
+                if (!m.visible) continue;
+                m.object.traverse((c) => {
+                    if (c.isMesh) {
+                        meshes.push(c);
+                        meshToModelId.set(c, m.id);
+                    }
+                });
+            }
+            // 핀 추가 모드 : 메시가 없으면 취소, 있으면 클릭 지점에 annotation 생성
+            if (annotationPlacingMode) {
+                if (meshes.length === 0) {
+                    console.info('[Viewer] 주석 배치: 로드된 메시가 없음 — OBJ/3dm 먼저 드롭');
+                    setPlacingMode(false);
+                    return;
+                }
+                const annoHits = _selectRaycaster.intersectObjects(meshes, false);
+                if (annoHits.length > 0) {
+                    pendingAnnotationTarget = annoHits[0].object;
+                    pendingAnnotationPoint = annoHits[0].point.clone();
+                    editingAnnotationId = null;
+                    $annoTitle.value = '';
+                    $annoBody.value = '';
+                    openAnnotationModal({ isNew: true });
+                } else {
+                    console.info('[Viewer] 주석 배치: 메시를 클릭해야 합니다');
+                }
+                setPlacingMode(false);
+                return;
+            }
+
+            if (meshes.length === 0) {
+                deselectObject();
+                return;
+            }
+
+            const hits = _selectRaycaster.intersectObjects(meshes, false);
+
+            if (hits.length > 0) {
+                // 기본: 개별 mesh(leaf) 선택 — USD처럼 자식별 독립 조작 가능
+                // Alt/Shift+Click: 해당 모델의 root 전체를 한 덩어리로 선택
+                const selectRoot = e.altKey || e.shiftKey;
+                if (selectRoot) {
+                    const id = meshToModelId.get(hits[0].object);
+                    const root = loadedModels.find(m => m.id === id);
+                    if (root) selectObject(root.object);
+                } else {
+                    selectObject(hits[0].object);
+                }
+            } else {
+                deselectObject();
+            }
+        }, { passive: true });
+
+        // 키보드 단축키: Esc 해제, G/R/S 모드 변경 (선택됐을 때만)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                deselectObject();
+                return;
+            }
+            if (selectedObject === null) return;
+            // FPS controls와 충돌 피하려고 선택된 상태에서만 처리
+            if (e.key === 'g' || e.key === 'G') setGizmoMode('translate');
+            else if (e.key === 't' || e.key === 'T') setGizmoMode('rotate'); // R은 height up이라 T로
+            else if (e.key === 'y' || e.key === 'Y') setGizmoMode('scale');
+            else if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+        });
+
+        // ── Annotations (3D 핀 + 모달) ──
+        // 각 annotation 은 target mesh 의 자식 Object3D (anchor) 를 가져서
+        // 메시가 gizmo 로 이동/회전/스케일 되어도 자동으로 따라옴.
+        // 매 프레임 anchor.getWorldPosition() 을 project → HTML 버튼 CSS transform.
+        const annotations = []; // { id, target, anchor, title, body, $pin, hidesTarget }
+        let annotationIdSeq = 0;
+        let annotationPlacingMode = false;
+        let editingAnnotationId = null; // 모달이 편집 중인 annotation id (새거면 null)
+        let pendingAnnotationTarget = null; // 새로 추가 중인 annotation 의 target
+        let pendingAnnotationPoint = null;  // 새로 추가 중인 world-space hit point
+        let pendingHidesTarget = false;     // 저장 시 target 메시를 숨길지 여부
+
+        const $btnAnnotate = document.getElementById('btn-annotate');
+        const $annoModal = document.getElementById('anno-modal');
+        const $annoModalLabel = document.getElementById('anno-modal-label');
+        const $annoTitle = document.getElementById('anno-title-input');
+        const $annoBody = document.getElementById('anno-body-input');
+        const $annoSave = document.getElementById('anno-save-btn');
+        const $annoCancel = document.getElementById('anno-cancel-btn');
+        const $annoDelete = document.getElementById('anno-delete-btn');
+
+        function setPlacingMode(on) {
+            annotationPlacingMode = on;
+            document.body.classList.toggle('anno-placing', on);
+            $btnAnnotate.textContent = on ? '× CANCEL' : '+ NOTE';
+        }
+
+        function openAnnotationModal({ isNew }) {
+            $annoModal.classList.add('open');
+            $annoModalLabel.textContent = isNew ? 'New Annotation' : 'Annotation';
+            $annoDelete.style.display = isNew ? 'none' : '';
+            setTimeout(() => $annoTitle.focus(), 50);
+        }
+
+        function closeAnnotationModal() {
+            $annoModal.classList.remove('open');
+            editingAnnotationId = null;
+            pendingAnnotationTarget = null;
+            pendingAnnotationPoint = null;
+            pendingHidesTarget = false;
+        }
+
+        function createAnnotation(target, worldPoint, title, body, hidesTarget) {
+            const anchor = new THREE.Object3D();
+            const local = target.worldToLocal(worldPoint.clone());
+            anchor.position.copy(local);
+            // anchor 는 target 을 부모로 쓰지만 target.visible=false 여도 보이도록
+            // anchor 를 target 의 부모(parent) 에 직접 붙이면 hidden 메시의 영향을 안 받음.
+            // 그런데 target 이 gizmo 로 이동하면 anchor 는 따라가지 않게 됨.
+            // 따라서 anchor 는 여전히 target 의 자식으로 두되, 위치 계산에만 사용.
+            // Object3D.getWorldPosition() 는 visible 상태와 무관하게 계산되므로 핀은 HTML 로 잘 뜬다.
+            target.add(anchor);
+
+            const id = ++annotationIdSeq;
+            const $pin = document.createElement('button');
+            $pin.type = 'button';
+            $pin.className = 'anno-pin';
+            $pin.textContent = '+';
+            $pin.title = title || '(제목 없음)';
+            $pin.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                // 핀 클릭 → 해당 annotation 편집 모달
+                const a = annotations.find(x => x.id === id);
+                if (!a) return;
+                editingAnnotationId = id;
+                $annoTitle.value = a.title || '';
+                $annoBody.value = a.body || '';
+                openAnnotationModal({ isNew: false });
+            });
+            document.body.appendChild($pin);
+
+            // hidesTarget 이면 메시 숨김 → 핀만 공중에 떠 있는 효과
+            if (hidesTarget) {
+                target.visible = false;
+            }
+
+            annotations.push({ id, target, anchor, title, body, $pin, hidesTarget: !!hidesTarget });
+        }
+
+        function removeAnnotation(id) {
+            const idx = annotations.findIndex(a => a.id === id);
+            if (idx < 0) return;
+            const a = annotations[idx];
+            // 이 annotation 이 메시를 숨겼다면 삭제 시 원복
+            if (a.hidesTarget && a.target) {
+                a.target.visible = true;
+            }
+            a.target?.remove?.(a.anchor);
+            a.$pin?.remove();
+            annotations.splice(idx, 1);
+        }
+
+        // 핀 추가 버튼
+        // 1) 이미 placing 모드면 → 취소
+        // 2) 선택된 mesh 가 있으면 → 그 mesh bbox 중심에 바로 핀 생성 (모달 열기)
+        // 3) 아무것도 선택 안 돼 있으면 → placing 모드 (커서 + 클릭) 로 진입
+        const _annoBBox = new THREE.Box3();
+        const _annoCenter = new THREE.Vector3();
+        const $btnAnnotateInvis = document.getElementById('btn-annotate-invis');
+
+        function openAnnotationOnSelected({ hidesTarget }) {
+            _annoBBox.setFromObject(selectedObject);
+            if (_annoBBox.isEmpty()) {
+                console.warn('[Viewer] 선택된 객체에 지오메트리가 없어 핀 생성 불가');
+                return false;
+            }
+            _annoBBox.getCenter(_annoCenter);
+            pendingAnnotationTarget = selectedObject;
+            pendingAnnotationPoint = _annoCenter.clone();
+            pendingHidesTarget = !!hidesTarget;
+            editingAnnotationId = null;
+            $annoTitle.value = '';
+            $annoBody.value = '';
+            openAnnotationModal({ isNew: true });
+            return true;
+        }
+
+        $btnAnnotate.addEventListener('click', () => {
+            if (annotationPlacingMode) {
+                setPlacingMode(false);
+                return;
+            }
+            if (selectedObject) {
+                if (openAnnotationOnSelected({ hidesTarget: false })) return;
+                setPlacingMode(true);
+                return;
+            }
+            setPlacingMode(true);
+        });
+
+        // + INV NOTE : 반드시 mesh 가 선택돼 있어야 함.
+        // 저장 시 createAnnotation 이 target.visible=false 로 설정 → 메시는 사라지고 + 핀만 남음.
+        $btnAnnotateInvis.addEventListener('click', () => {
+            if (annotationPlacingMode) {
+                setPlacingMode(false);
+            }
+            if (!selectedObject) {
+                alert('메시를 먼저 선택하세요.\n\n사용법:\n1) 메시 클릭 → 선택\n2) + INV NOTE 클릭\n\n저장하면 메시는 숨겨지고 + 핀만 남습니다.');
+                return;
+            }
+            openAnnotationOnSelected({ hidesTarget: true });
+        });
+
+        // 모달 버튼
+        $annoSave.addEventListener('click', () => {
+            const title = $annoTitle.value.trim() || '(제목 없음)';
+            const body = $annoBody.value;
+            if (editingAnnotationId !== null) {
+                // 기존 수정
+                const a = annotations.find(x => x.id === editingAnnotationId);
+                if (a) {
+                    a.title = title;
+                    a.body = body;
+                    a.$pin.title = title;
+                }
+            } else if (pendingAnnotationTarget && pendingAnnotationPoint) {
+                // 새로 생성
+                createAnnotation(
+                    pendingAnnotationTarget, pendingAnnotationPoint, title, body,
+                    pendingHidesTarget,
+                );
+                // invisible note 로 만든 경우, 숨겨진 메시에 gizmo 가 붙어있으면 헷갈리므로 해제
+                if (pendingHidesTarget) deselectObject();
+            }
+            closeAnnotationModal();
+        });
+
+        $annoCancel.addEventListener('click', closeAnnotationModal);
+        $annoModal.addEventListener('click', (e) => {
+            if (e.target === $annoModal) closeAnnotationModal();
+        });
+
+        $annoDelete.addEventListener('click', () => {
+            if (editingAnnotationId !== null) {
+                if (confirm('이 주석을 삭제할까요?')) {
+                    removeAnnotation(editingAnnotationId);
+                    closeAnnotationModal();
+                }
+            }
+        });
+
+        // 모델 삭제 시 해당 모델에 붙어있던 annotation 정리
+        // (deleteSelected 가 호출될 때 traverse 이전에 cleanup)
+        function cleanupAnnotationsFor(obj) {
+            const toRemove = [];
+            obj.traverse((c) => {
+                for (const a of annotations) {
+                    if (a.target === c) toRemove.push(a.id);
+                }
+            });
+            toRemove.forEach(removeAnnotation);
+        }
+
+        // 핀 추가 모드 클릭 핸들러: renderer.domElement 의 pointerup 에서 체크.
+        // 기존 selection/drag 로직과 분기. (기존 핸들러에서 annotationPlacingMode 체크해서
+        // 분기하는 코드는 아래 선택 raycast 로직 수정 시점에 추가.)
+
+        // 매 프레임 핀 위치 갱신: annotation.anchor 의 world pos → 스크린 좌표.
+        const _annoWorld = new THREE.Vector3();
+        const _annoView = new THREE.Vector3();
+        function updateAnnotationPins() {
+            if (annotations.length === 0) return;
+            // 카메라 변환 최신화 (FirstPersonControls / gizmo 가 방금 바꿨을 수 있음)
+            camera.updateMatrixWorld();
+            const invView = camera.matrixWorldInverse;
+            const hw = window.innerWidth / 2;
+            const hh = window.innerHeight / 2;
+
+            for (const a of annotations) {
+                // anchor 의 parent 변환이 갱신되지 않았을 수 있음 → 강제 업데이트
+                a.anchor.updateMatrixWorld(true);
+                a.anchor.getWorldPosition(_annoWorld);
+
+                // 카메라 뒤쪽 여부는 view-space z > 0 으로 판정 (Three.js 카메라는 -Z 방향을 봄)
+                _annoView.copy(_annoWorld).applyMatrix4(invView);
+                if (_annoView.z >= 0) {
+                    a.$pin.classList.add('hidden');
+                    continue;
+                }
+
+                // 카메라 앞쪽이면 projection (NDC [-1, 1]) → 픽셀 좌표
+                _annoWorld.project(camera);
+                const x = _annoWorld.x * hw + hw;
+                const y = -_annoWorld.y * hh + hh;
+
+                a.$pin.classList.remove('hidden');
+                // translate3d 로 GPU 가속 + sub-pixel 정밀도 유지
+                a.$pin.style.transform =
+                    `translate3d(${x - 16}px, ${y - 16}px, 0)`;
+            }
+        }
+
+        // ── Mesh collision (raycast ring) ──
+        // 카메라 수평 주위로 N개의 레이를 쏴서 PLAYER_RADIUS 안에 메시가 있으면
+        // 그 방향 반대로 penetration 만큼 밀어낸다. 가볍고 외부 의존성 없음.
+        const COLLISION_RAY_COUNT = 16;
+        const _collisionDirs = [];
+        for (let i = 0; i < COLLISION_RAY_COUNT; i++) {
+            const a = (i / COLLISION_RAY_COUNT) * Math.PI * 2;
+            _collisionDirs.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a)));
+        }
+        const _meshRaycaster = new THREE.Raycaster();
+        _meshRaycaster.far = PLAYER_RADIUS;
+
+        function applyMeshCollision() {
+            if (!meshColliderState.enabled) return;
+            if (loadedModels.length === 0) return;
+            // 보이는 모델의 메시만 수집
+            const meshes = [];
+            for (const m of loadedModels) {
+                if (!m.visible) continue;
+                m.object.traverse((c) => {
+                    if (c.isMesh) meshes.push(c);
+                });
+            }
+            if (meshes.length === 0) return;
+            _meshRaycaster.far = PLAYER_RADIUS;
+            for (const dir of _collisionDirs) {
+                _meshRaycaster.set(camera.position, dir);
+                const hits = _meshRaycaster.intersectObjects(meshes, false);
+                if (hits.length > 0 && hits[0].distance < PLAYER_RADIUS) {
+                    const penetration = PLAYER_RADIUS - hits[0].distance;
+                    camera.position.x -= dir.x * penetration;
+                    camera.position.z -= dir.z * penetration;
+                }
+            }
+        }
 
         // ── Render loop ──
         const clock = new THREE.Clock();
@@ -1032,7 +2294,7 @@
                 camera.quaternion.multiply(_qPitch);
             }
 
-            // Collision
+            // Collision (LCC splat)
             if (collisionActive) {
                 const res = lccObj.intersectsSphere({
                     center: {
@@ -1048,8 +2310,14 @@
                 }
             }
 
+            // Collision (imported meshes: OBJ / 3DM)
+            applyMeshCollision();
+
             LCCRender.update();
             renderer.render(scene, camera);
+
+            // HTML 주석 핀들을 현재 카메라 시점에 맞춰 스크린 위치 갱신
+            updateAnnotationPins();
 
             updateDebugHud(performance.now());
         }
