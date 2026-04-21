@@ -763,6 +763,129 @@
             display: none;
         }
 
+        /* ── Annotation speech bubble ── */
+        .anno-bubble {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 29;
+            max-width: 260px;
+            min-width: 140px;
+            padding: 10px 12px 12px;
+            border-radius: 10px;
+            background: rgba(20, 20, 20, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.45;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            pointer-events: auto;
+            will-change: transform;
+        }
+
+        .anno-bubble.hidden {
+            display: none;
+        }
+
+        .anno-bubble::before {
+            /* 핀을 가리키는 꼬리 (좌측) */
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 14px;
+            width: 0;
+            height: 0;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-right: 7px solid rgba(20, 20, 20, 0.94);
+        }
+
+        .anno-bubble-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #fff;
+            word-break: break-word;
+        }
+
+        .anno-bubble-body {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.82);
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .anno-bubble-body:empty {
+            display: none;
+        }
+
+        .anno-bubble-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .anno-bubble-btn {
+            padding: 4px 8px;
+            font: 500 10px/1 inherit;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            transition: background 120ms, border-color 120ms, color 120ms;
+        }
+
+        .anno-bubble-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        /* ── Teleport prompt button (proximity trigger) ── */
+        .teleport-btn {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 24px;
+            border-radius: 999px;
+            border: 1px solid rgba(120, 200, 255, 0.6);
+            background: rgba(30, 120, 200, 0.85);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font: 600 13px/1 inherit;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            box-shadow: 0 10px 32px rgba(30, 120, 200, 0.45);
+            transition: transform 180ms, background 180ms, box-shadow 180ms, opacity 180ms;
+        }
+
+        .teleport-btn:hover {
+            background: rgba(60, 160, 240, 1);
+            box-shadow: 0 14px 40px rgba(60, 160, 240, 0.6);
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .teleport-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(12px);
+        }
+
+        .teleport-btn::before {
+            content: '⇆';
+            font-size: 16px;
+            line-height: 1;
+        }
+
         /* 핀 추가 모드일 때 커서 표시 */
         body.anno-placing canvas {
             cursor: crosshair !important;
@@ -898,8 +1021,14 @@
         <button class="ctrl-btn" id="btn-reset" title="리셋 / 초기 위치">RESET ↺</button>
         <button class="ctrl-btn" id="btn-annotate" title="객체에 + 주석 핀 추가">+ NOTE</button>
         <button class="ctrl-btn" id="btn-annotate-invis" title="선택 메시를 숨기고 + 핀만 남기기">+ INV NOTE</button>
+        <button class="ctrl-btn" id="btn-expand-all" title="모든 주석 카드 열기">EXPAND ALL</button>
+        <button class="ctrl-btn" id="btn-collapse-all" title="모든 주석 카드 접기">COLLAPSE ALL</button>
+        <button class="ctrl-btn" id="btn-quality" title="렌더 품질 (splat 수 / LOD). 클릭해서 순환 LOW → MED → HIGH">QUALITY: LOW</button>
         <button class="ctrl-btn" id="btn-rotate" title="横向き / 가로 회전" style="display:none;">ROTATE ⤾</button>
     </div>
+
+    <!-- Teleport prompt (proximity trigger) -->
+    <button class="teleport-btn hidden" id="teleport-btn" type="button"></button>
 
     <!-- Annotation modal -->
     <div class="anno-modal-backdrop" id="anno-modal">
@@ -1009,6 +1138,13 @@
         const params = new URLSearchParams(location.search);
         const DATA_PATH = params.get('data')
             || 'https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/voidbox-hq-lcc/260408_voidbox.lcc';
+        // mesh 파라미터: 스캔 결과 mesh URL (OBJ). pin raycast 용으로 투명 로드.
+        // csv 의 mesh 컬럼에서 전달됨. 값 없으면 일반 viewer 동작.
+        const MESH_PATH = params.get('mesh') || null;
+
+        // 스캔 메시를 올리는 layer. 카메라 는 layer 0 만 보므로 이 layer 는 렌더되지 않음.
+        // selection raycaster 만 이 layer 를 enable → click 으로 pin 배치 가능.
+        const SCAN_LAYER = 5;
 
         // Spawn 위치와 회전은 URL 파라미터(px, py, pz, yaw, pitch)로 오버라이드 가능.
         // 없으면 기본값 사용. yaw/pitch는 도 단위(deg).
@@ -1377,6 +1513,118 @@
         setupJoystick($joyMove, document.getElementById('joy-move-knob'), moveVec);
         setupJoystick($joyLook, document.getElementById('joy-look-knob'), lookVec);
 
+        // ── LCC quality / LOD control ──
+        // 초기엔 LOW 로 빠르게 로드 → 사용자가 QUALITY 버튼으로 MED/HIGH 로 올림.
+        // setMaxSplats: 총 splat 상한. 핵심 레버.  setEndLod: 최고 LOD 컷.  setMaxDistance: 원거리 컬.
+        const QUALITY_PRESETS = [
+            { label: 'LOW',  maxSplats: 2_000_000,  endLod: 2,  maxDistance: 40 },
+            { label: 'MED',  maxSplats: 6_000_000,  endLod: 3,  maxDistance: 80 },
+            { label: 'HIGH', maxSplats: 0,          endLod: 16, maxDistance: 0 },
+        ];
+        let qualityIdx = 0;
+
+        // 속성 접근 시 private field 게터가 throw 할 수 있음 → 반드시 try/catch.
+        function safeIsFn(obj, name) {
+            try { return typeof obj[name] === 'function'; } catch { return false; }
+        }
+        function safeGetKeys(obj) {
+            try { return Object.keys(obj); } catch { return []; }
+        }
+
+        // lccObj 의 메서드가 직접 노출 안 돼 있을 수 있음 → property / 자식 / prototype 순서로 탐색.
+        function findMethod(obj, names) {
+            if (!obj) return null;
+            for (const n of names) {
+                if (safeIsFn(obj, n)) return { target: obj, name: n };
+            }
+            for (const key of safeGetKeys(obj)) {
+                let v;
+                try { v = obj[key]; } catch { continue; }
+                if (v && typeof v === 'object') {
+                    for (const n of names) {
+                        if (safeIsFn(v, n)) return { target: v, name: n };
+                    }
+                }
+            }
+            const proto = Object.getPrototypeOf(obj);
+            if (proto) {
+                for (const n of names) {
+                    if (safeIsFn(proto, n)) return { target: obj, name: n };
+                }
+            }
+            return null;
+        }
+
+        function callMethod(obj, names, arg, logTag) {
+            const found = findMethod(obj, names);
+            if (!found) {
+                console.warn(`[Viewer] ${logTag}: no matching method found in`, names);
+                return false;
+            }
+            try {
+                found.target[found.name](arg);
+                console.info(`[Viewer] ${logTag}: called ${found.name}(${arg})`);
+                return true;
+            } catch (e) {
+                console.warn(`[Viewer] ${logTag}: ${found.name}(${arg}) threw:`, e);
+                return false;
+            }
+        }
+
+        function applyQuality(preset) {
+            // lccObj 는 LCCRender.load() 뒤에 만들어지므로 호출 시점에 존재.
+            if (typeof lccObj === 'undefined' || !lccObj) {
+                console.warn('[Viewer] applyQuality: lccObj not ready yet');
+                return;
+            }
+            const maxSplatsArg = preset.maxSplats > 0 ? preset.maxSplats : 50_000_000;
+            callMethod(lccObj, ['setMaxSplats', 'SetMaxSplats'], maxSplatsArg, 'setMaxSplats');
+            callMethod(lccObj, ['setEndLod', 'SetEndLod'], preset.endLod, 'setEndLod');
+            const maxDistArg = preset.maxDistance > 0 ? preset.maxDistance : 1e6;
+            callMethod(lccObj, ['setMaxDistance', 'SetMaxDistance'], maxDistArg, 'setMaxDistance');
+            console.info('[Viewer] quality preset applied:', preset);
+        }
+
+        function debugDumpLccObj() {
+            if (typeof lccObj === 'undefined' || !lccObj) {
+                console.warn('[Viewer] debug dump: lccObj null'); return;
+            }
+            // 속성 접근이 throw 할 수 있으니 전부 safeIsFn 경유
+            const ownNames = (() => { try { return Object.getOwnPropertyNames(lccObj); } catch { return []; } })();
+            const own = ownNames.filter(k => safeIsFn(lccObj, k));
+            const proto = Object.getPrototypeOf(lccObj);
+            const protoNames = proto ? (() => { try { return Object.getOwnPropertyNames(proto); } catch { return []; } })() : [];
+            const protoMethods = protoNames.filter(k => safeIsFn(proto, k));
+            const protoSetters = protoNames.filter(k => /^set/i.test(k) && safeIsFn(proto, k));
+            const childWithSetters = {};
+            for (const k of safeGetKeys(lccObj)) {
+                let v;
+                try { v = lccObj[k]; } catch { continue; }
+                if (v && typeof v === 'object') {
+                    const childProto = Object.getPrototypeOf(v);
+                    if (!childProto) continue;
+                    const cNames = (() => { try { return Object.getOwnPropertyNames(childProto); } catch { return []; } })();
+                    const methods = cNames.filter(x => /^set/i.test(x) && safeIsFn(childProto, x));
+                    if (methods.length) childWithSetters[k] = methods;
+                }
+            }
+            console.info('[Viewer] lccObj own methods:', own);
+            console.info('[Viewer] lccObj prototype methods:', protoMethods);
+            console.info('[Viewer] lccObj prototype set*:', protoSetters);
+            console.info('[Viewer] lccObj child objects with set* methods:', childWithSetters);
+        }
+
+        const $btnQuality = document.getElementById('btn-quality');
+        function refreshQualityBtn() {
+            if ($btnQuality) $btnQuality.textContent = `QUALITY: ${QUALITY_PRESETS[qualityIdx].label}`;
+        }
+        $btnQuality?.addEventListener('click', () => {
+            qualityIdx = (qualityIdx + 1) % QUALITY_PRESETS.length;
+            refreshQualityBtn();
+            applyQuality(QUALITY_PRESETS[qualityIdx]);
+        });
+        refreshQualityBtn();
+
         // ── LCC load ──
         const modelMatrix = new THREE.Matrix4(
             -1, 0, 0, 0,
@@ -1400,6 +1648,8 @@
                 useLoadingEffect: true,
                 modelMatrix,
                 appKey: null,
+                // 초기 로드 빨리 하려고 동시 다운로드 수 상향 (HTTP/2 에서 유효)
+                MaxConcurrentDownloads: 10,
             },
             () => {
                 $loadPct.textContent = '100%';
@@ -1420,6 +1670,9 @@
                 splatReady = true;
                 applyClipToSplat();
                 console.info('[Viewer] splat clipping API ready (setClipPlane)');
+                // onComplete 이후에 실제 메서드 테이블이 생기므로 여기서 dump + 현재 품질 재적용
+                debugDumpLccObj();
+                applyQuality(QUALITY_PRESETS[qualityIdx]);
             },
             (percent) => {
                 const pct = Math.round(percent * 100);
@@ -1432,6 +1685,10 @@
             },
         );
 
+        // 로드 시작 직후 초기 프리셋(LOW) 1회 시도. 내부 초기화 전이면 "not ready" 로그만 찍힘 —
+        // 그 경우는 onComplete 에서 다시 적용되므로 안전.
+        applyQuality(QUALITY_PRESETS[qualityIdx]);
+
         // ── OBJ drag & drop ──
         // Splat과 동일한 modelMatrix(축 flip)를 OBJ에도 적용해
         // 같은 좌표계에서 보이도록 한다.
@@ -1440,6 +1697,39 @@
         scene.add(objGroup);
 
         const objLoader = new OBJLoader();
+
+        // ── Scan mesh (invisible OBJ for pin placement) ──
+        // CSV 의 mesh 열로 지정된 URL 에서 OBJ 를 받아와 씬에 배치.
+        // 렌더는 안되지만(layer 분리), selection raycaster 는 선택적으로 hit 가능.
+        // 용도: 가우시안 스플랫과 중첩된 "clickable surface" — pin 을 여기 찍는다.
+        const scanObjGroup = new THREE.Group();
+        scanObjGroup.applyMatrix4(modelMatrix);
+        scene.add(scanObjGroup);
+
+        function loadScanMesh(url) {
+            console.info('[Viewer] scan mesh loading:', url);
+            objLoader.load(
+                url,
+                (obj) => {
+                    // 모든 descendant 을 SCAN_LAYER 로만 이동 → 카메라(default=0)에 안 보임
+                    obj.traverse((c) => {
+                        c.layers.set(SCAN_LAYER);
+                        if (c.isMesh) {
+                            c.userData.isScanMesh = true;
+                            // Raycaster 는 c.visible=true 일 때만 테스트하므로 유지
+                        }
+                    });
+                    scanObjGroup.add(obj);
+                    console.info('[Viewer] scan mesh loaded OK:', obj);
+                },
+                undefined,
+                (err) => {
+                    console.error('[Viewer] scan mesh load failed:', err);
+                },
+            );
+        }
+
+        if (MESH_PATH) loadScanMesh(MESH_PATH);
 
         // Rhino3dmLoader는 rhino3dm.wasm 라이브러리가 필요.
         // jsdelivr CDN에서 받아옴. 오프라인 사용이 필요하면
@@ -1877,6 +2167,8 @@
         const CLICK_MS_THR = 300;
         let pDownX = 0, pDownY = 0, pDownT = 0, pDownBtn = -1;
         const _selectRaycaster = new THREE.Raycaster();
+        // 기본 layer 0 + SCAN_LAYER 둘 다 테스트 → scan mesh 도 hit 가능
+        _selectRaycaster.layers.enable(SCAN_LAYER);
         const _ndc = new THREE.Vector2();
 
         renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -1900,7 +2192,8 @@
             _ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
             _selectRaycaster.setFromCamera(_ndc, camera);
 
-            // 각 로드된 모델의 모든 mesh 수집 + 어떤 모델에 속하는지 역매핑
+            // 로드된 모델 mesh + scan mesh 모두 수집.
+            // selection 에선 scan mesh 제외, 핀 배치에선 둘 다 허용.
             const meshes = [];
             const meshToModelId = new Map();
             for (const m of loadedModels) {
@@ -1912,10 +2205,17 @@
                     }
                 });
             }
-            // 핀 추가 모드 : 메시가 없으면 취소, 있으면 클릭 지점에 annotation 생성
+            // 스캔 메시 포함 (pin placement raycast 용)
+            scanObjGroup.traverse((c) => {
+                if (c.isMesh && c.userData.isScanMesh) {
+                    meshes.push(c);
+                }
+            });
+
+            // 핀 추가 모드: scan mesh 포함 모든 hit 허용
             if (annotationPlacingMode) {
                 if (meshes.length === 0) {
-                    console.info('[Viewer] 주석 배치: 로드된 메시가 없음 — OBJ/3dm 먼저 드롭');
+                    console.info('[Viewer] 주석 배치: 클릭 가능한 mesh 없음 — OBJ/3dm 드롭하거나 CSV 에 mesh URL 지정');
                     setPlacingMode(false);
                     return;
                 }
@@ -1928,7 +2228,7 @@
                     $annoBody.value = '';
                     openAnnotationModal({ isNew: true });
                 } else {
-                    console.info('[Viewer] 주석 배치: 메시를 클릭해야 합니다');
+                    console.info('[Viewer] 주석 배치: 메시/스캔면을 클릭해야 합니다');
                 }
                 setPlacingMode(false);
                 return;
@@ -1940,17 +2240,19 @@
             }
 
             const hits = _selectRaycaster.intersectObjects(meshes, false);
+            // selection 에선 scan mesh 제외 (보이지 않는 객체를 gizmo 로 조작하면 혼란)
+            const selectableHits = hits.filter(h => !h.object.userData.isScanMesh);
 
-            if (hits.length > 0) {
+            if (selectableHits.length > 0) {
                 // 기본: 개별 mesh(leaf) 선택 — USD처럼 자식별 독립 조작 가능
                 // Alt/Shift+Click: 해당 모델의 root 전체를 한 덩어리로 선택
                 const selectRoot = e.altKey || e.shiftKey;
                 if (selectRoot) {
-                    const id = meshToModelId.get(hits[0].object);
+                    const id = meshToModelId.get(selectableHits[0].object);
                     const root = loadedModels.find(m => m.id === id);
                     if (root) selectObject(root.object);
                 } else {
-                    selectObject(hits[0].object);
+                    selectObject(selectableHits[0].object);
                 }
             } else {
                 deselectObject();
@@ -1960,6 +2262,16 @@
         // 키보드 단축키: Esc 해제, G/R/S 모드 변경 (선택됐을 때만)
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                // 주석 모달이 열려있으면 모달 닫기 우선
+                if ($annoModal && $annoModal.classList.contains('open')) {
+                    closeAnnotationModal();
+                    return;
+                }
+                // placing 모드면 취소
+                if (annotationPlacingMode) {
+                    setPlacingMode(false);
+                    return;
+                }
                 deselectObject();
                 return;
             }
@@ -2002,6 +2314,17 @@
             $annoModal.classList.add('open');
             $annoModalLabel.textContent = isNew ? 'New Annotation' : 'Annotation';
             $annoDelete.style.display = isNew ? 'none' : '';
+            // FPS 컨트롤 비활성화 → 입력창에 W/A/S/D/R/F 를 쳐도 카메라가 움직이지 않음
+            if (controls) {
+                controls.enabled = false;
+                controls.moveForward = false;
+                controls.moveBackward = false;
+                controls.moveLeft = false;
+                controls.moveRight = false;
+                controls.moveUp = false;
+                controls.moveDown = false;
+                controls.sprint = false;
+            }
             setTimeout(() => $annoTitle.focus(), 50);
         }
 
@@ -2011,6 +2334,17 @@
             pendingAnnotationTarget = null;
             pendingAnnotationPoint = null;
             pendingHidesTarget = false;
+            // FPS 컨트롤 재활성화 + 이동 상태 초기화 (모달 내 타이핑으로 쌓인 키 상태 제거)
+            if (controls) {
+                controls.moveForward = false;
+                controls.moveBackward = false;
+                controls.moveLeft = false;
+                controls.moveRight = false;
+                controls.moveUp = false;
+                controls.moveDown = false;
+                controls.sprint = false;
+                controls.enabled = true;
+            }
         }
 
         function createAnnotation(target, worldPoint, title, body, hidesTarget) {
@@ -2030,16 +2364,76 @@
             $pin.className = 'anno-pin';
             $pin.textContent = '+';
             $pin.title = title || '(제목 없음)';
+
+            // 말풍선 (제목 + 내용 + Edit / Delete 액션)
+            const $bubble = document.createElement('div');
+            $bubble.className = 'anno-bubble hidden';
+            const $bubbleTitle = document.createElement('div');
+            $bubbleTitle.className = 'anno-bubble-title';
+            const $bubbleBody = document.createElement('div');
+            $bubbleBody.className = 'anno-bubble-body';
+            const $bubbleActions = document.createElement('div');
+            $bubbleActions.className = 'anno-bubble-actions';
+            const $bubbleEdit = document.createElement('button');
+            $bubbleEdit.className = 'anno-bubble-btn';
+            $bubbleEdit.type = 'button';
+            $bubbleEdit.textContent = 'Edit';
+            const $bubbleDelete = document.createElement('button');
+            $bubbleDelete.className = 'anno-bubble-btn';
+            $bubbleDelete.type = 'button';
+            $bubbleDelete.textContent = 'Delete';
+            $bubbleActions.appendChild($bubbleEdit);
+            $bubbleActions.appendChild($bubbleDelete);
+            $bubble.appendChild($bubbleTitle);
+            $bubble.appendChild($bubbleBody);
+            $bubble.appendChild($bubbleActions);
+            document.body.appendChild($bubble);
+
             $pin.addEventListener('click', (ev) => {
                 ev.stopPropagation();
-                // 핀 클릭 → 해당 annotation 편집 모달
                 const a = annotations.find(x => x.id === id);
                 if (!a) return;
+                // 핀 클릭 → 말풍선 토글 (다른 말풍선은 닫음)
+                const wasOpen = !a.$bubble.classList.contains('hidden');
+                for (const other of annotations) {
+                    if (other !== a) {
+                        other.$bubble.classList.add('hidden');
+                        if (other.$pin) other.$pin.textContent = '+';
+                    }
+                }
+                if (wasOpen) {
+                    a.$bubble.classList.add('hidden');
+                    a.$pin.textContent = '+';
+                } else {
+                    a.$bubble.querySelector('.anno-bubble-title').textContent = a.title || '(제목 없음)';
+                    a.$bubble.querySelector('.anno-bubble-body').textContent = a.body || '';
+                    a.$bubble.classList.remove('hidden');
+                    a.$pin.textContent = '−';
+                }
+            });
+
+            $bubbleEdit.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const a = annotations.find(x => x.id === id);
+                if (!a) return;
+                a.$bubble.classList.add('hidden');
+                if (a.$pin) a.$pin.textContent = '+';
                 editingAnnotationId = id;
                 $annoTitle.value = a.title || '';
                 $annoBody.value = a.body || '';
                 openAnnotationModal({ isNew: false });
             });
+
+            $bubbleDelete.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (confirm('이 주석을 삭제할까요?')) {
+                    removeAnnotation(id);
+                }
+            });
+
+            // 말풍선 내부 클릭 시 배경 클릭(선택 해제 등)으로 버블링 안되게
+            $bubble.addEventListener('click', (ev) => ev.stopPropagation());
+
             document.body.appendChild($pin);
 
             // hidesTarget 이면 메시 숨김 → 핀만 공중에 떠 있는 효과
@@ -2047,7 +2441,7 @@
                 target.visible = false;
             }
 
-            annotations.push({ id, target, anchor, title, body, $pin, hidesTarget: !!hidesTarget });
+            annotations.push({ id, target, anchor, title, body, $pin, $bubble, hidesTarget: !!hidesTarget });
         }
 
         function removeAnnotation(id) {
@@ -2060,6 +2454,7 @@
             }
             a.target?.remove?.(a.anchor);
             a.$pin?.remove();
+            a.$bubble?.remove();
             annotations.splice(idx, 1);
         }
 
@@ -2125,6 +2520,13 @@
                     a.title = title;
                     a.body = body;
                     a.$pin.title = title;
+                    // 열려 있던 말풍선 내용도 동기화
+                    if (a.$bubble) {
+                        const $t = a.$bubble.querySelector('.anno-bubble-title');
+                        const $b = a.$bubble.querySelector('.anno-bubble-body');
+                        if ($t) $t.textContent = a.title || '(제목 없음)';
+                        if ($b) $b.textContent = a.body || '';
+                    }
                 }
             } else if (pendingAnnotationTarget && pendingAnnotationPoint) {
                 // 새로 생성
@@ -2136,6 +2538,27 @@
                 if (pendingHidesTarget) deselectObject();
             }
             closeAnnotationModal();
+        });
+
+        // 모든 카드 열기 / 접기
+        const $btnExpandAll = document.getElementById('btn-expand-all');
+        const $btnCollapseAll = document.getElementById('btn-collapse-all');
+        $btnExpandAll?.addEventListener('click', () => {
+            for (const a of annotations) {
+                if (!a.$bubble) continue;
+                const $t = a.$bubble.querySelector('.anno-bubble-title');
+                const $b = a.$bubble.querySelector('.anno-bubble-body');
+                if ($t) $t.textContent = a.title || '(제목 없음)';
+                if ($b) $b.textContent = a.body || '';
+                a.$bubble.classList.remove('hidden');
+                if (a.$pin) a.$pin.textContent = '−';
+            }
+        });
+        $btnCollapseAll?.addEventListener('click', () => {
+            for (const a of annotations) {
+                if (a.$bubble) a.$bubble.classList.add('hidden');
+                if (a.$pin) a.$pin.textContent = '+';
+            }
         });
 
         $annoCancel.addEventListener('click', closeAnnotationModal);
@@ -2188,6 +2611,7 @@
                 _annoView.copy(_annoWorld).applyMatrix4(invView);
                 if (_annoView.z >= 0) {
                     a.$pin.classList.add('hidden');
+                    if (a.$bubble) a.$bubble.classList.add('hidden');
                     continue;
                 }
 
@@ -2200,6 +2624,13 @@
                 // translate3d 로 GPU 가속 + sub-pixel 정밀도 유지
                 a.$pin.style.transform =
                     `translate3d(${x - 16}px, ${y - 16}px, 0)`;
+
+                // 말풍선은 핀 오른쪽으로 붙임 (꼬리가 좌측을 가리킴).
+                // 핀 크기 32px, 여백 10px → 핀 우측 가장자리 + 10
+                if (a.$bubble && !a.$bubble.classList.contains('hidden')) {
+                    a.$bubble.style.transform =
+                        `translate3d(${x + 26}px, ${y - 18}px, 0)`;
+                }
             }
         }
 
@@ -2319,7 +2750,223 @@
             // HTML 주석 핀들을 현재 카메라 시점에 맞춰 스크린 위치 갱신
             updateAnnotationPins();
 
+            // 텔레포트 트리거 proximity 체크 → 하단 버튼 표시/숨김
+            updateTeleports();
+
             updateDebugHud(performance.now());
+        }
+
+        // ── Teleports (proximity-triggered scene switch) ──
+        // teleports.csv 를 읽어 현재 씬(DATA_PATH 에 scene_match 가 포함된 행)만 활성화.
+        // 매 프레임 카메라와 trigger 좌표 사이 3D 거리를 radius 와 비교 → 들어오면 버튼 노출.
+        const $teleportBtn = document.getElementById('teleport-btn');
+        let activeTeleports = [];      // { trigger: Vector3, radius, destUrl, destPx/Py/Pz, destYaw, destPitch, label }
+        let currentTeleport = null;    // 현재 범위 안의 가장 가까운 teleport (버튼에 바인딩)
+
+        function parseTeleportsCSV(text) {
+            const lines = text.trim().split(/\r?\n/);
+            if (lines.length < 2) return [];
+            const header = lines[0].split(',').map(h => h.trim());
+            const rows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+                // URL 은 percent-encode 돼 있어 쉼표 없음 → 단순 split
+                const parts = line.split(',').map(p => p.trim());
+                const row = {};
+                header.forEach((k, j) => { row[k] = parts[j]; });
+                rows.push(row);
+            }
+            return rows;
+        }
+
+        async function loadTeleports() {
+            try {
+                const res = await fetch('./teleports.csv');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const rows = parseTeleportsCSV(await res.text());
+                activeTeleports = rows
+                    .filter(r => r.scene_match && DATA_PATH && DATA_PATH.includes(r.scene_match))
+                    .map(r => {
+                        const trigPy = parseFloat(r.trigger_py);
+                        // marker_y: 링 시각적 Y (바닥 높이). 지정 없으면 trigger_py - 1.5 (눈↔바닥 보정).
+                        const markerY = (r.marker_y !== undefined && r.marker_y !== '')
+                            ? parseFloat(r.marker_y)
+                            : trigPy - 1.5;
+                        return {
+                            trigger: new THREE.Vector3(
+                                parseFloat(r.trigger_px),
+                                trigPy,
+                                parseFloat(r.trigger_pz),
+                            ),
+                            markerY,
+                            radius: parseFloat(r.radius) || 3.0,
+                            destUrl: r.dest_url,
+                            destPx: r.dest_px, destPy: r.dest_py, destPz: r.dest_pz,
+                            destYaw: r.dest_yaw, destPitch: r.dest_pitch,
+                            label: r.label || '이동하기',
+                            marker: null, // 3D 씬에 놓이는 portal 마커 group
+                        };
+                    });
+                for (const t of activeTeleports) {
+                    t.marker = buildTeleportMarker(t);
+                    scene.add(t.marker);
+                }
+                console.info('[Viewer] Teleports active for this scene:', activeTeleports.length, activeTeleports);
+            } catch (err) {
+                console.warn('[Viewer] teleports.csv 로드 실패 (선택 파일):', err);
+                activeTeleports = [];
+            }
+        }
+        loadTeleports();
+
+        // Teleport 마커: 바닥에 깔린 빛나는 이중 링 + 중심 디스크.
+        // 재질은 additive blending 으로 배경과 상관없이 잘 보이게 함.
+        function buildTeleportMarker(t) {
+            const group = new THREE.Group();
+            // 링/기둥의 시각적 위치는 markerY (바닥 높이) 를 사용. trigger X/Z 는 그대로.
+            group.position.set(t.trigger.x, t.markerY ?? t.trigger.y, t.trigger.z);
+
+            const color = 0x5cc8ff; // 시안 계열
+
+            // 바깥 링 (두꺼운 토러스 형태)
+            const outerGeom = new THREE.RingGeometry(0.95, 1.15, 64);
+            const outerMat = new THREE.MeshBasicMaterial({
+                color, transparent: true, opacity: 0.9,
+                side: THREE.DoubleSide, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+            const outerRing = new THREE.Mesh(outerGeom, outerMat);
+            outerRing.rotation.x = -Math.PI / 2;
+            group.add(outerRing);
+
+            // 안쪽 링 (가늘게) — 반대 방향으로 회전시켜 포탈 느낌
+            const innerGeom = new THREE.RingGeometry(0.55, 0.72, 48);
+            const innerMat = new THREE.MeshBasicMaterial({
+                color, transparent: true, opacity: 0.7,
+                side: THREE.DoubleSide, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+            const innerRing = new THREE.Mesh(innerGeom, innerMat);
+            innerRing.rotation.x = -Math.PI / 2;
+            group.add(innerRing);
+
+            // 중심 디스크 (은은한 글로우)
+            const discGeom = new THREE.CircleGeometry(1.15, 64);
+            const discMat = new THREE.MeshBasicMaterial({
+                color, transparent: true, opacity: 0.18,
+                side: THREE.DoubleSide, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+            const disc = new THREE.Mesh(discGeom, discMat);
+            disc.rotation.x = -Math.PI / 2;
+            disc.position.y = 0.001; // z-fighting 방지
+            group.add(disc);
+
+            // 수직 빛기둥 — 하늘까지 위로만 뻗음.
+            // 아래로는 연장하지 않아서 바닥(Gaussian Splat 지면)을 뚫고 나오지 않음.
+            // Splat 은 depth 를 제대로 쓰지 않아 완벽한 occlusion 은 어렵지만,
+            // 적어도 링보다 아래쪽으로는 기둥이 그려지지 않게 함.
+            const PILLAR_HEIGHT = 500;
+            const pillarGeom = new THREE.CylinderGeometry(0.9, 0.9, PILLAR_HEIGHT, 32, 1, true);
+            const pillarMat = new THREE.MeshBasicMaterial({
+                color, transparent: true, opacity: 0.10,
+                side: THREE.DoubleSide, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+            const pillar = new THREE.Mesh(pillarGeom, pillarMat);
+            // 기둥 바닥이 링 위치에서 시작하도록 — 링 아래로는 그리지 않음
+            pillar.position.y = PILLAR_HEIGHT / 2;
+            group.add(pillar);
+            const pillarDown = null; // 제거됨 (바닥 관통 방지)
+
+            // 마커가 충돌/선택/raycast 에 걸리지 않도록 layer 분리.
+            // SCAN_LAYER 와 같은 철학: 카메라는 레이어 0 만 보지만, 여기선 오히려
+            // 카메라(layer 0)가 봐야 하므로 그대로 두되, 각 mesh 의 userData 에 플래그.
+            group.traverse((c) => {
+                c.userData.isTeleportMarker = true;
+                c.userData.noCollide = true;
+            });
+
+            // 애니메이션 상태 — render 루프에서 시간 기반으로 업데이트
+            group.userData._anim = { outerRing, innerRing, disc, pillar, pillarDown };
+            return group;
+        }
+
+        function buildTeleportHref(t) {
+            const qs = new URLSearchParams();
+            qs.set('data', t.destUrl);
+            if (t.destPx) qs.set('px', t.destPx);
+            if (t.destPy) qs.set('py', t.destPy);
+            if (t.destPz) qs.set('pz', t.destPz);
+            if (t.destYaw) qs.set('yaw', t.destYaw);
+            if (t.destPitch) qs.set('pitch', t.destPitch);
+            return `./viewer.html?${qs.toString()}`;
+        }
+
+        $teleportBtn.addEventListener('click', () => {
+            if (!currentTeleport) return;
+            location.href = buildTeleportHref(currentTeleport);
+        });
+
+        const _tpCamPos = new THREE.Vector3();
+        function updateTeleports() {
+            if (activeTeleports.length === 0) {
+                if (!$teleportBtn.classList.contains('hidden')) {
+                    $teleportBtn.classList.add('hidden');
+                }
+                currentTeleport = null;
+                return;
+            }
+            camera.getWorldPosition(_tpCamPos);
+            const now = performance.now() * 0.001; // 초 단위
+            // XZ 평면에서만 거리 측정 (Y 는 무시 → 카메라 높이에 상관없이 트리거됨)
+            const xzDist = (t) => {
+                const dx = _tpCamPos.x - t.trigger.x;
+                const dz = _tpCamPos.z - t.trigger.z;
+                return Math.hypot(dx, dz);
+            };
+            // 가장 가까운 in-range 트리거 선택 (여러 개 동시 겹칠 경우 대비)
+            let best = null;
+            let bestDist = Infinity;
+            for (const t of activeTeleports) {
+                const d = xzDist(t);
+                if (d <= t.radius && d < bestDist) {
+                    best = t;
+                    bestDist = d;
+                }
+            }
+            // 각 마커 애니메이션 (회전 + 스케일 pulse + 근접 시 글로우 강화)
+            for (const t of activeTeleports) {
+                if (!t.marker) continue;
+                const a = t.marker.userData._anim;
+                if (!a) continue;
+                a.outerRing.rotation.z = now * 0.6;
+                a.innerRing.rotation.z = -now * 1.1;
+                const pulse = 1 + Math.sin(now * 2.2) * 0.06;
+                a.outerRing.scale.setScalar(pulse);
+                a.innerRing.scale.setScalar(2 - pulse);
+
+                // 카메라 거리별 밝기: radius 밖에선 기본값, 안으로 들어갈수록 밝아짐 (XZ 기준)
+                const d = xzDist(t);
+                const near = Math.max(0, Math.min(1, 1 - d / (t.radius * 1.6)));
+                a.outerRing.material.opacity = 0.6 + near * 0.4;
+                a.innerRing.material.opacity = 0.45 + near * 0.45;
+                a.disc.material.opacity = 0.12 + near * 0.25;
+                a.pillar.material.opacity = 0.06 + near * 0.18;
+                if (a.pillarDown) a.pillarDown.material.opacity = 0.06 + near * 0.18;
+            }
+
+            if (best) {
+                if (currentTeleport !== best) {
+                    currentTeleport = best;
+                    $teleportBtn.textContent = best.label;
+                }
+                $teleportBtn.classList.remove('hidden');
+            } else {
+                $teleportBtn.classList.add('hidden');
+                currentTeleport = null;
+            }
         }
 
         renderer.setAnimationLoop(render);

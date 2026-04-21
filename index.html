@@ -433,7 +433,8 @@
         function buildViewerHref(row) {
             const qs = new URLSearchParams();
             qs.set('data', row.url);
-            ['px', 'py', 'pz', 'yaw', 'pitch'].forEach(k => {
+            // mesh: 스캔 결과 mesh URL (선택). viewer 에서 pin raycast 용으로 투명 로드.
+            ['px', 'py', 'pz', 'yaw', 'pitch', 'mesh'].forEach(k => {
                 if (row[k]) qs.set(k, row[k]);
             });
             return `./viewer.html?${qs.toString()}`;
