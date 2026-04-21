@@ -108,6 +108,7 @@
         }
 
         .scene-btn {
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -123,6 +124,37 @@
             text-decoration: none;
             cursor: pointer;
             transition: background 150ms, border-color 150ms, transform 100ms;
+        }
+
+        /* 씬 카드 삭제 버튼 (admin only) — 카드 우상단 작은 X */
+        .scene-del-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 90, 90, 0.45);
+            background: rgba(30, 10, 10, 0.65);
+            color: rgba(255, 180, 180, 0.85);
+            font: 700 14px/1 inherit;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 120ms, background 120ms, color 120ms, border-color 120ms;
+        }
+
+        .scene-btn:hover .scene-del-btn {
+            opacity: 1;
+        }
+
+        .scene-del-btn:hover {
+            background: rgba(255, 90, 90, 0.35);
+            color: #fff;
+            border-color: rgba(255, 120, 120, 0.85);
         }
 
         .scene-btn:hover {
@@ -188,6 +220,290 @@
             font-size: 12px;
             letter-spacing: 0.15em;
             text-transform: uppercase;
+        }
+
+        /* ── Add scene (admin only) ── */
+        body:not(.admin-on) .admin-only-index {
+            display: none !important;
+        }
+
+        /* ── PLY converter ── */
+        .ply-convert {
+            margin-top: 18px;
+            width: 100%;
+            max-width: 800px;
+            padding: 18px 20px;
+            border: 1px dashed rgba(120, 200, 255, 0.35);
+            border-radius: 10px;
+            background: rgba(120, 200, 255, 0.05);
+            color: #cfe3f7;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ply-convert-title {
+            font: 700 12px/1 inherit;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #cfe3f7;
+        }
+
+        .ply-convert-sub {
+            font-size: 11px;
+            color: rgba(207, 227, 247, 0.55);
+        }
+
+        .ply-drop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 26px 16px;
+            border: 2px dashed rgba(120, 200, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: border-color 160ms, background 160ms;
+        }
+
+        .ply-drop:hover,
+        .ply-drop.drag-over {
+            border-color: rgba(120, 200, 255, 0.85);
+            background: rgba(120, 200, 255, 0.08);
+        }
+
+        .ply-drop-main {
+            font: 600 13px/1.4 inherit;
+            color: #fff;
+            letter-spacing: 0.06em;
+        }
+
+        .ply-drop-sub {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .ply-drop-sub code {
+            font-family: "SF Mono", "Consolas", monospace;
+            color: rgba(120, 200, 255, 0.9);
+        }
+
+        .ply-progress.hidden { display: none; }
+        .ply-progress-msg {
+            font-size: 11px;
+            color: rgba(207, 227, 247, 0.8);
+            margin-bottom: 6px;
+            font-family: "SF Mono", "Consolas", monospace;
+        }
+        .ply-progress-track {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .ply-progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #5cc8ff, #bfe3ff);
+            transition: width 180ms ease;
+        }
+
+        .add-scene-trigger {
+            margin-top: 28px;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .add-scene-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 28px;
+            border: 1px solid rgba(120, 200, 255, 0.55);
+            border-radius: 10px;
+            background: rgba(120, 200, 255, 0.12);
+            color: #bfe3ff;
+            font: 600 13px/1 inherit;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 150ms, border-color 150ms, color 150ms;
+        }
+
+        .add-scene-btn:hover {
+            background: rgba(120, 200, 255, 0.25);
+            border-color: rgba(120, 200, 255, 0.8);
+            color: #fff;
+        }
+
+        .add-scene-modal-backdrop {
+            position: fixed; inset: 0; z-index: 140;
+            display: none;
+            align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.68);
+            backdrop-filter: blur(6px);
+        }
+        .add-scene-modal-backdrop.open { display: flex; }
+
+        .add-scene-modal {
+            width: 92%;
+            max-width: 480px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 14px;
+            background: #141414;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .add-scene-modal-title {
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .add-scene-modal label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .add-scene-modal label > span {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .add-scene-modal input[type="text"] {
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .add-scene-modal input[type="text"]:focus {
+            border-color: rgba(120, 200, 255, 0.6);
+        }
+
+        .add-scene-group {
+            display: flex;
+            gap: 12px;
+            padding: 6px 0;
+        }
+
+        .add-scene-radio {
+            display: inline-flex !important;
+            flex-direction: row !important;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .add-scene-radio input[type="radio"] {
+            accent-color: #5cc8ff;
+        }
+
+        .add-scene-radio span {
+            font-size: 12px !important;
+            letter-spacing: 0.1em !important;
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .add-scene-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .add-scene-actions button {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font: 500 11px/1 inherit;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.75);
+            transition: background 120ms, border-color 120ms, color 120ms;
+        }
+
+        .add-scene-actions button:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .add-scene-actions button.primary {
+            background: rgba(120, 200, 255, 0.25);
+            border-color: rgba(120, 200, 255, 0.6);
+            color: #fff;
+        }
+
+        .add-scene-actions button.primary:hover {
+            background: rgba(120, 200, 255, 0.4);
+        }
+
+        .add-scene-note {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.42);
+            line-height: 1.5;
+        }
+
+        /* ── Admin toggle ── */
+        .admin-toggle {
+            margin-top: 28px;
+            width: 100%;
+            max-width: 800px;
+            padding: 12px 16px;
+            border: 1px dashed rgba(255, 90, 90, 0.35);
+            border-radius: 10px;
+            background: rgba(255, 90, 90, 0.06);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: rgba(255, 180, 180, 0.85);
+        }
+
+        .admin-toggle label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font: 600 12px/1 inherit;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .admin-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #ff7575;
+            cursor: pointer;
+        }
+
+        .admin-toggle small {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.02em;
+            text-transform: none;
+        }
+
+        body.admin-on .admin-toggle {
+            border-color: rgba(255, 90, 90, 0.7);
+            background: rgba(255, 90, 90, 0.18);
         }
 
         /* ── Custom URL button ── */
@@ -385,6 +701,68 @@
         </div>
     </div>
 
+    <!-- Add new scene button (admin-only via body.admin-on gate) -->
+    <div class="add-scene-trigger admin-only-index">
+        <button class="add-scene-btn" id="btn-add-scene" type="button">+ 새로운 공간 추가</button>
+    </div>
+
+    <!-- GS PLY → Rhino PLY converter (admin only) -->
+    <div class="ply-convert admin-only-index" id="ply-convert">
+        <div class="ply-convert-title">Gaussian Splat .ply → Rhino .ply 변환</div>
+        <div class="ply-convert-sub">3DGS point_cloud.ply 를 Rhino `_Import` 가능한 컬러 PLY 로 변환</div>
+        <label class="ply-drop" id="ply-drop">
+            <input type="file" id="ply-file" accept=".ply" hidden>
+            <span class="ply-drop-main">.PLY 파일을 여기로 드롭하거나 클릭</span>
+            <span class="ply-drop-sub">변환 결과 <code>*_rhino.ply</code> 가 자동 다운로드됩니다</span>
+        </label>
+        <div class="ply-progress hidden" id="ply-progress">
+            <div class="ply-progress-msg" id="ply-progress-msg">처리 중…</div>
+            <div class="ply-progress-track"><div class="ply-progress-fill" id="ply-progress-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- Add new scene modal -->
+    <div class="add-scene-modal-backdrop" id="add-scene-modal">
+        <div class="add-scene-modal">
+            <div class="add-scene-modal-title">새로운 공간 추가</div>
+            <label>
+                <span>이름</span>
+                <input type="text" id="new-scene-name" placeholder="예: 대림동 카페" maxlength="120">
+            </label>
+            <label>
+                <span>S3 URL (.lcc)</span>
+                <input type="text" id="new-scene-url" placeholder="https://...amazonaws.com/.../scene.lcc">
+            </label>
+            <label>
+                <span>Mesh URL (선택)</span>
+                <input type="text" id="new-scene-mesh" placeholder="https://...amazonaws.com/.../scene.obj">
+            </label>
+            <div class="add-scene-group">
+                <label class="add-scene-radio">
+                    <input type="radio" name="new-scene-group" value="indoor" checked>
+                    <span>실내</span>
+                </label>
+                <label class="add-scene-radio">
+                    <input type="radio" name="new-scene-group" value="outdoor">
+                    <span>실외</span>
+                </label>
+            </div>
+            <div class="add-scene-actions">
+                <button id="new-scene-cancel" type="button">취소</button>
+                <button id="new-scene-submit" class="primary" type="button">확인 → Spawn 설정</button>
+            </div>
+            <div class="add-scene-note">확인을 누르면 해당 씬으로 이동. 원하는 위치/방향으로 움직인 뒤 한 번 더 "여기를 Spawn 으로" 클릭해 저장합니다.</div>
+        </div>
+    </div>
+
+    <div class="admin-toggle">
+        <label>
+            <input type="checkbox" id="admin-toggle-cb">
+            <span>관리자 모드 (Admin)</span>
+        </label>
+        <small>관리자만 텔레포트·노트 생성/편집/삭제 가능</small>
+    </div>
+
     <div class="custom-url-trigger">
         <button class="custom-url-btn" id="open-modal" type="button">
             🔗 URL 직접 입력
@@ -433,6 +811,16 @@
                 .filter(r => r.name && r.url);
         }
 
+        // Admin 토글 상태를 localStorage 에 기억 → 새 링크 빌드 시 자동 반영
+        const LS_ADMIN_KEY = 'voidbox.adminMode';
+        function isAdminModeEnabled() {
+            return localStorage.getItem(LS_ADMIN_KEY) === '1';
+        }
+        function setAdminMode(on) {
+            if (on) localStorage.setItem(LS_ADMIN_KEY, '1');
+            else localStorage.removeItem(LS_ADMIN_KEY);
+        }
+
         function buildViewerHref(row) {
             const qs = new URLSearchParams();
             qs.set('data', row.url);
@@ -440,6 +828,7 @@
             ['px', 'py', 'pz', 'yaw', 'pitch', 'mesh'].forEach(k => {
                 if (row[k]) qs.set(k, row[k]);
             });
+            if (isAdminModeEnabled()) qs.set('mode', 'admin');
             return `./viewer.html?${qs.toString()}`;
         }
 
@@ -459,11 +848,13 @@
             console.info('[Main] prefetch started:', row.name);
         }
 
-        function renderList(container, rows) {
+        function renderList(container, rows, group) {
             if (rows.length === 0) {
                 container.innerHTML = '<div class="empty-msg">등록된 장면이 없습니다</div>';
                 return;
             }
+            // 각 카드는 <a> 로 유지 (클릭 시 viewer 이동). 삭제 버튼은 카드 내부에
+            // absolute 로 띄워 stopPropagation 으로 네비게이션 방지.
             container.innerHTML = rows.map((row, i) => {
                 const href = buildViewerHref(row);
                 const index = String(i + 1).padStart(2, '0');
@@ -473,35 +864,200 @@
                         <span class="scene-btn-label">${row.name}</span>
                     </span>
                     <span class="scene-btn-arrow">VIEW →</span>
+                    <button class="scene-del-btn admin-only-index" type="button" title="이 씬 삭제" aria-label="삭제">×</button>
                 </a>`;
             }).join('');
 
-            // 카드에 hover / touchstart 시 해당 씬의 매니페스트 + mesh prefetch
             container.querySelectorAll('.scene-btn').forEach((btn) => {
                 const idx = parseInt(btn.dataset.rowIdx, 10);
                 const row = rows[idx];
+
+                // hover/touch prefetch
                 const trigger = () => prefetchScene(row);
                 btn.addEventListener('mouseenter', trigger, { once: true });
                 btn.addEventListener('touchstart', trigger, { once: true, passive: true });
                 btn.addEventListener('focus', trigger, { once: true });
+
+                // 삭제 버튼
+                const $del = btn.querySelector('.scene-del-btn');
+                $del?.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!confirm(`"${row.name}" 을(를) 목록에서 삭제합니다.\n(scenes.csv 도 업데이트되어 다운로드됩니다)`)) return;
+                    const { deleteSceneByUrl, buildUpdatedScenesCsv } =
+                        await import('./modules/scenes/scenes-storage.js');
+                    deleteSceneByUrl(group, row.url);
+                    // CSV 자동 다운로드 (관리자가 프로젝트에 덮어써 영구 반영)
+                    try {
+                        const csvText = await buildUpdatedScenesCsv(group);
+                        const filename = group === 'outdoor' ? 'scenes-outdoor.csv' : 'scenes.csv';
+                        const { downloadText } = await import('./modules/persistence/csv-utils.js');
+                        downloadText(filename, csvText);
+                    } catch (err) { console.warn('[Main] scenes CSV build failed:', err); }
+                    // 리스트 재로드
+                    loadColumn(group, container.id);
+                });
             });
         }
 
-        async function loadColumn(csvPath, containerId) {
+        // 정적 CSV + localStorage 에 저장된 사용자 추가분 병합 (모듈 경유)
+        async function loadColumn(group, containerId) {
             const container = document.getElementById(containerId);
             try {
-                const res = await fetch(csvPath);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const rows = parseCSV(await res.text());
-                renderList(container, rows);
+                const { getAllScenes } = await import('./modules/scenes/scenes-storage.js');
+                const rows = await getAllScenes(group);
+                renderList(container, rows, group);
             } catch (err) {
-                console.error(`[Main] ${csvPath} 로드 실패:`, err);
-                container.innerHTML = `<div class="error-msg">${csvPath} 로드 실패</div>`;
+                console.error(`[Main] scenes ${group} 로드 실패:`, err);
+                container.innerHTML = `<div class="error-msg">씬 목록 로드 실패</div>`;
             }
         }
 
-        loadColumn('./scenes.csv', 'list-interior');
-        loadColumn('./scenes-outdoor.csv', 'list-outdoor');
+        loadColumn('indoor', 'list-interior');
+        loadColumn('outdoor', 'list-outdoor');
+
+        // ── Add new scene modal ────────────────────────────────────────────
+        const $addSceneBtn = document.getElementById('btn-add-scene');
+        const $addSceneModal = document.getElementById('add-scene-modal');
+        const $nsName = document.getElementById('new-scene-name');
+        const $nsUrl = document.getElementById('new-scene-url');
+        const $nsMesh = document.getElementById('new-scene-mesh');
+        const $nsCancel = document.getElementById('new-scene-cancel');
+        const $nsSubmit = document.getElementById('new-scene-submit');
+
+        function openAddSceneModal() {
+            $nsName.value = '';
+            $nsUrl.value = '';
+            $nsMesh.value = '';
+            document.querySelector('input[name="new-scene-group"][value="indoor"]').checked = true;
+            $addSceneModal.classList.add('open');
+            setTimeout(() => $nsName.focus(), 50);
+        }
+        function closeAddSceneModal() { $addSceneModal.classList.remove('open'); }
+
+        $addSceneBtn?.addEventListener('click', openAddSceneModal);
+        $nsCancel?.addEventListener('click', closeAddSceneModal);
+        $addSceneModal.addEventListener('click', (e) => {
+            if (e.target === $addSceneModal) closeAddSceneModal();
+        });
+
+        $nsSubmit?.addEventListener('click', async () => {
+            const name = $nsName.value.trim();
+            const url = $nsUrl.value.trim();
+            const mesh = $nsMesh.value.trim();
+            const group = document.querySelector('input[name="new-scene-group"]:checked')?.value || 'indoor';
+            if (!name) { alert('이름을 입력하세요.'); $nsName.focus(); return; }
+            if (!url || !/^https?:\/\//i.test(url)) { alert('.lcc 파일의 http(s) URL 을 입력하세요.'); $nsUrl.focus(); return; }
+
+            // 사용자 scene 저장 (spawn 미설정 상태) + viewer 의 setup 모드로 이동
+            const { upsertUserScene } = await import('./modules/scenes/scenes-storage.js');
+            const row = { name, url };
+            if (mesh) row.mesh = mesh;
+            upsertUserScene(group, row);
+
+            // viewer.html?setup=1&group=...&data=... 로 이동 (admin 필요)
+            const qs = new URLSearchParams();
+            qs.set('data', url);
+            if (mesh) qs.set('mesh', mesh);
+            qs.set('setup', '1');
+            qs.set('group', group);
+            qs.set('mode', 'admin');
+            location.href = `./viewer.html?${qs.toString()}`;
+        });
+
+        // Admin 모드 토글 — 체크박스와 body 클래스 + localStorage 동기화.
+        // 씬 링크는 buildViewerHref 가 매 클릭시 즉시 생성되므로,
+        // 토글을 바꾸면 별도 리렌더 없이 다음 클릭부터 반영됨.
+        const $adminCb = document.getElementById('admin-toggle-cb');
+        function syncAdminUI() {
+            const on = isAdminModeEnabled();
+            $adminCb.checked = on;
+            document.body.classList.toggle('admin-on', on);
+        }
+        $adminCb.addEventListener('change', () => {
+            setAdminMode($adminCb.checked);
+            syncAdminUI();
+        });
+        syncAdminUI();
+
+        // ── PLY → Rhino PLY converter ─────────────────────────────────────
+        const $plyDrop = document.getElementById('ply-drop');
+        const $plyFile = document.getElementById('ply-file');
+        const $plyProgress = document.getElementById('ply-progress');
+        const $plyProgressMsg = document.getElementById('ply-progress-msg');
+        const $plyProgressFill = document.getElementById('ply-progress-fill');
+
+        function setPlyProgress(pct, msg) {
+            $plyProgress.classList.remove('hidden');
+            $plyProgressFill.style.width = `${pct}%`;
+            if (msg) $plyProgressMsg.textContent = msg;
+        }
+        function resetPlyProgress() {
+            $plyProgress.classList.add('hidden');
+            $plyProgressFill.style.width = '0%';
+            $plyProgressMsg.textContent = '';
+        }
+
+        async function handlePlyFile(file) {
+            if (!file || !/\.ply$/i.test(file.name)) {
+                alert('.ply 파일만 지원합니다.');
+                return;
+            }
+            try {
+                setPlyProgress(1, `입력: ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`);
+                const inputBuffer = await file.arrayBuffer();
+                const { convertGsPlyToRhinoPly } =
+                    await import('./modules/utils/gs-to-rhino.js');
+                const outputBuffer = await convertGsPlyToRhinoPly(inputBuffer, {
+                    opacityThreshold: 0.1,
+                    maxPoints: 800_000,
+                    applyViewerMatrix: true,
+                    onProgress: ({ pct, msg }) => setPlyProgress(pct, msg),
+                });
+                // 다운로드 파일명: 원본명에 `_rhino` 추가
+                const base = file.name.replace(/\.ply$/i, '');
+                const { downloadText } =
+                    await import('./modules/persistence/csv-utils.js');
+                // downloadText 는 string 전용 → 직접 Blob 생성
+                const blob = new Blob([outputBuffer], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `${base}_rhino.ply`;
+                document.body.appendChild(a); a.click();
+                setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+                setPlyProgress(100, `✓ ${base}_rhino.ply 다운로드 완료`);
+                setTimeout(resetPlyProgress, 3500);
+            } catch (err) {
+                console.error('[Main] PLY 변환 실패:', err);
+                alert(`변환 실패: ${err.message}`);
+                resetPlyProgress();
+            }
+        }
+
+        // 파일 선택 (클릭)
+        $plyFile.addEventListener('change', (e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePlyFile(f);
+            $plyFile.value = ''; // 같은 파일 재선택 가능
+        });
+
+        // 드래그 앤 드롭
+        ;['dragenter', 'dragover'].forEach(ev => {
+            $plyDrop.addEventListener(ev, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                $plyDrop.classList.add('drag-over');
+            });
+        });
+        ;['dragleave', 'drop'].forEach(ev => {
+            $plyDrop.addEventListener(ev, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                $plyDrop.classList.remove('drag-over');
+            });
+        });
+        $plyDrop.addEventListener('drop', (e) => {
+            const f = e.dataTransfer?.files?.[0];
+            if (f) handlePlyFile(f);
+        });
 
         // Modal
         const $modal = document.getElementById('modal');

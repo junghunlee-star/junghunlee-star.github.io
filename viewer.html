@@ -30,6 +30,115 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
+            /* 드래그로 UI 텍스트 선택 방지 (뷰어 조작 중 실수로 라벨이 파랗게 선택되는 것 제거) */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* 실제 텍스트 입력 요소는 당연히 선택/편집 가능해야 함 */
+        input,
+        textarea,
+        [contenteditable="true"] {
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+
+        /* ── Admin gate ───────────────────────────────────────────────────
+           editor 전용 UI 는 .admin-only 클래스. body.admin 일 때만 보임.
+           이용자 모드(기본) 에서는 전부 숨겨져서 사용 불가.                */
+        body:not(.admin) .admin-only {
+            display: none !important;
+        }
+
+        /* ── Setup mode (새 씬의 spawn 위치 설정) ──
+           setup 모드에선 거의 모든 UI 를 숨기고 하단 확인/취소 패널만 표시.         */
+        body.setup .admin-only,
+        body.setup .top-buttons,
+        body.setup .height-slider,
+        body.setup #debugHud,
+        body.setup .admin-badge {
+            display: none !important;
+        }
+
+        .setup-panel {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 22px;
+            border-radius: 14px;
+            border: 1px solid rgba(120, 200, 255, 0.55);
+            background: rgba(20, 30, 45, 0.94);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+        body.setup .setup-panel { display: flex; }
+
+        .setup-panel .setup-label {
+            font: 600 11px/1 inherit;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+            margin-right: 6px;
+        }
+
+        .setup-panel button {
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font: 600 12px/1 inherit;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+        }
+        .setup-panel button.primary {
+            background: rgba(120, 200, 255, 0.3);
+            border-color: rgba(120, 200, 255, 0.7);
+        }
+        .setup-panel button.primary:hover { background: rgba(120, 200, 255, 0.5); }
+        .setup-panel button:hover { background: rgba(255, 255, 255, 0.16); }
+
+        .setup-hud {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 50;
+            display: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(120, 200, 255, 0.5);
+            background: rgba(20, 30, 45, 0.9);
+            color: #cfe8ff;
+            font: 600 11px/1.4 inherit;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        body.setup .setup-hud { display: block; }
+
+        /* 관리자 모드 표시 배지 */
+        .admin-badge {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 55;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: rgba(255, 90, 90, 0.2);
+            border: 1px solid rgba(255, 90, 90, 0.55);
+            color: #ffb3b3;
+            font: 700 10px/1 inherit;
+            letter-spacing: 0.24em;
+            pointer-events: none;
         }
 
         canvas {
@@ -762,6 +871,17 @@
             box-shadow: 0 6px 22px rgba(60, 160, 240, 0.5);
         }
 
+        /* 저장되지 않은 노트 핀 — 빨강 */
+        .anno-pin.unsaved {
+            background: rgba(220, 70, 70, 0.92);
+            border-color: rgba(255, 180, 180, 0.9);
+            box-shadow: 0 4px 14px rgba(220, 70, 70, 0.5);
+        }
+        .anno-pin.unsaved:hover {
+            background: rgba(240, 95, 95, 1);
+            box-shadow: 0 6px 22px rgba(240, 95, 95, 0.6);
+        }
+
         .anno-pin.hidden {
             display: none;
         }
@@ -887,6 +1007,289 @@
             content: '⇆';
             font-size: 16px;
             line-height: 1;
+        }
+
+        /* EDIT 버튼 (텔레포트 버튼 옆) */
+        .teleport-edit-btn {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(calc(-50% + 180px));
+            z-index: 40;
+            padding: 12px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font: 600 11px/1 inherit;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: transform 180ms, background 180ms, opacity 180ms;
+        }
+
+        .teleport-edit-btn:hover {
+            background: rgba(60, 60, 60, 1);
+        }
+
+        .teleport-edit-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(calc(-50% + 180px)) translateY(12px);
+        }
+
+        /* 회전 슬라이더 패널 */
+        .teleport-rotate-panel {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            z-index: 41;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(120, 200, 255, 0.45);
+            background: rgba(20, 20, 20, 0.94);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font: 500 12px/1 inherit;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .teleport-rotate-panel.hidden {
+            display: none;
+        }
+
+        .teleport-rotate-panel label {
+            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .teleport-rotate-panel input[type="range"] {
+            width: 150px;
+            accent-color: #5cc8ff;
+        }
+
+        .teleport-rotate-panel .rot-val {
+            width: 52px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+        }
+
+        .teleport-rotate-panel .rot-done {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(120, 200, 255, 0.6);
+            background: rgba(120, 200, 255, 0.2);
+            color: #fff;
+            font: 600 11px/1 inherit;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .teleport-rotate-panel .rot-done:hover {
+            background: rgba(120, 200, 255, 0.35);
+        }
+
+        .teleport-rotate-panel .rot-sep {
+            width: 1px;
+            align-self: stretch;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        .teleport-rotate-panel .rot-action {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.85);
+            font: 600 11px/1 inherit;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: background 140ms, border-color 140ms, color 140ms;
+        }
+
+        .teleport-rotate-panel .rot-action:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+        }
+
+        .teleport-rotate-panel .rot-action.danger:hover {
+            background: rgba(255, 90, 90, 0.24);
+            border-color: rgba(255, 90, 90, 0.6);
+            color: #fff;
+        }
+
+        /* 텔레포트 생성: 위치 확정 패널 (여기로 / 취소) */
+        .tp-place-panel {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            z-index: 45;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(120, 200, 255, 0.55);
+            background: rgba(20, 30, 45, 0.94);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+
+        .tp-place-panel.hidden { display: none; }
+
+        .tp-place-panel .tp-step-label {
+            font: 600 11px/1 inherit;
+            letter-spacing: 0.14em;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .tp-place-panel button {
+            padding: 10px 16px;
+            border-radius: 999px;
+            font: 600 12px/1 inherit;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transition: background 160ms, border-color 160ms;
+        }
+
+        .tp-place-panel button.primary {
+            background: rgba(120, 200, 255, 0.3);
+            border-color: rgba(120, 200, 255, 0.7);
+        }
+
+        .tp-place-panel button.primary:hover {
+            background: rgba(120, 200, 255, 0.5);
+        }
+
+        .tp-place-panel button:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        /* 씬 선택 모달 */
+        .tp-scene-modal-backdrop {
+            position: fixed; inset: 0; z-index: 130;
+            display: none;
+            align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+        }
+
+        .tp-scene-modal-backdrop.open { display: flex; }
+
+        .tp-scene-modal {
+            width: 92%;
+            max-width: 760px;
+            max-height: 78vh;
+            display: flex; flex-direction: column;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 14px;
+            background: #141414;
+            color: #fff;
+            gap: 12px;
+        }
+
+        .tp-scene-modal .tp-scene-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            overflow: hidden;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .tp-scene-modal .tp-scene-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .tp-scene-modal .tp-scene-col-title {
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+            padding: 4px 2px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .tp-scene-modal .tp-scene-cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tp-scene-modal .tp-scene-title {
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tp-scene-modal .tp-scene-list {
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 6px;
+            padding-right: 4px;
+        }
+
+        .tp-scene-modal .tp-scene-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+            font: 500 13px/1.3 inherit;
+            cursor: pointer;
+            transition: background 140ms, border-color 140ms;
+        }
+
+        .tp-scene-modal .tp-scene-item:hover {
+            background: rgba(120, 200, 255, 0.12);
+            border-color: rgba(120, 200, 255, 0.55);
+        }
+
+        .tp-scene-modal .tp-scene-item .tp-scene-grp {
+            font-size: 10px;
+            letter-spacing: 0.14em;
+            color: rgba(255, 255, 255, 0.42);
+            text-transform: uppercase;
+        }
+
+        .tp-scene-modal .tp-scene-actions {
+            display: flex; justify-content: flex-end; gap: 8px;
+        }
+
+        .tp-scene-modal .tp-scene-actions button {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font: 500 11px/1 inherit;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .tp-scene-modal .tp-scene-actions button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
         }
 
         /* 핀 추가 모드일 때 커서 표시 */
@@ -1022,19 +1425,75 @@
     <div class="top-buttons">
         <a class="ctrl-btn" href="./" title="목록으로 돌아가기">← BACK</a>
         <button class="ctrl-btn" id="btn-reset" title="리셋 / 초기 위치">RESET ↺</button>
-        <button class="ctrl-btn" id="btn-annotate" title="객체에 + 주석 핀 추가">+ NOTE</button>
-        <button class="ctrl-btn" id="btn-annotate-invis" title="선택 메시를 숨기고 + 핀만 남기기">+ INV NOTE</button>
+        <button class="ctrl-btn admin-only" id="btn-annotate" title="객체에 + 주석 핀 추가">+ NOTE</button>
+        <button class="ctrl-btn admin-only" id="btn-annotate-invis" title="선택 메시를 숨기고 + 핀만 남기기">+ INV NOTE</button>
         <button class="ctrl-btn" id="btn-expand-all" title="모든 주석 카드 열기">EXPAND ALL</button>
         <button class="ctrl-btn" id="btn-collapse-all" title="모든 주석 카드 접기">COLLAPSE ALL</button>
+        <button class="ctrl-btn admin-only" id="btn-save-notes" title="이 씬의 모든 노트를 notes.csv 에 저장">SAVE NOTES</button>
         <button class="ctrl-btn" id="btn-quality" title="렌더 품질 (splat 수 / LOD). 클릭해서 순환 LOW → MED → HIGH">QUALITY: LOW</button>
+        <button class="ctrl-btn admin-only" id="btn-teleport-create" title="현재 위치와 다른 씬을 연결하는 쌍방 텔레포트 생성">+ TELEPORT</button>
+        <button class="ctrl-btn admin-only" id="btn-import-collider" title="보이지 않는 collider mesh 추가 (OBJ / 3DM) — 충돌만 유발">+ COLLIDER</button>
+        <input type="file" id="collider-file-input" accept=".obj,.3dm" multiple hidden>
         <button class="ctrl-btn" id="btn-rotate" title="横向き / 가로 회전" style="display:none;">ROTATE ⤾</button>
+    </div>
+    <div class="admin-badge admin-only">ADMIN</div>
+
+    <!-- Setup mode: 새 씬의 spawn 위치 확정 UI -->
+    <div class="setup-hud">NEW SCENE SPAWN SETUP</div>
+    <div class="setup-panel" id="setup-panel">
+        <span class="setup-label">현재 위치 / 방향을 spawn 으로</span>
+        <button id="setup-confirm" class="primary" type="button">✓ 여기를 Spawn 으로</button>
+        <button id="setup-cancel" type="button">취소</button>
     </div>
 
     <!-- Teleport prompt (proximity trigger) -->
     <button class="teleport-btn hidden" id="teleport-btn" type="button"></button>
+    <button class="teleport-edit-btn hidden admin-only" id="teleport-edit-btn" type="button" title="이 텔레포트 방향 편집">✎ EDIT</button>
+
+    <!-- Rotate / edit panel (appears in edit mode) -->
+    <div class="teleport-rotate-panel hidden admin-only" id="teleport-rotate-panel">
+        <label>YAW</label>
+        <input type="range" id="teleport-rotate-range" min="-180" max="180" step="1" value="0">
+        <span class="rot-val" id="teleport-rotate-val">0°</span>
+        <label>Y</label>
+        <input type="range" id="teleport-height-range" min="-5" max="5" step="0.05" value="0">
+        <span class="rot-val" id="teleport-height-val">0.0</span>
+        <span class="rot-sep"></span>
+        <button class="rot-action" id="teleport-change-scene" type="button" title="연결된 씬 / 도착점 바꾸기">씬 변경</button>
+        <button class="rot-action danger" id="teleport-delete" type="button" title="이 텔레포트 삭제 (쌍방 함께)">🗑 삭제</button>
+        <span class="rot-sep"></span>
+        <button class="rot-done" id="teleport-rotate-done" type="button">DONE</button>
+    </div>
+
+    <!-- Teleport creation: place panel (여기로 / 취소) -->
+    <div class="tp-place-panel hidden admin-only" id="tp-place-panel">
+        <span class="tp-step-label" id="tp-step-label">STEP 1 / 2</span>
+        <button id="tp-here-btn" class="primary" type="button">여기로 하기</button>
+        <button id="tp-cancel-btn" type="button">취소</button>
+    </div>
+
+    <!-- Teleport creation: scene picker modal -->
+    <div class="tp-scene-modal-backdrop admin-only" id="tp-scene-modal">
+        <div class="tp-scene-modal">
+            <div class="tp-scene-title">이동할 씬 선택</div>
+            <div class="tp-scene-cols">
+                <div class="tp-scene-col">
+                    <div class="tp-scene-col-title">실내</div>
+                    <div class="tp-scene-list" id="tp-scene-list-indoor"></div>
+                </div>
+                <div class="tp-scene-col">
+                    <div class="tp-scene-col-title">실외</div>
+                    <div class="tp-scene-list" id="tp-scene-list-outdoor"></div>
+                </div>
+            </div>
+            <div class="tp-scene-actions">
+                <button id="tp-scene-cancel" type="button">취소</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Annotation modal -->
-    <div class="anno-modal-backdrop" id="anno-modal">
+    <div class="anno-modal-backdrop admin-only" id="anno-modal">
         <div class="anno-modal">
             <div class="anno-modal-title" id="anno-modal-label">Annotation</div>
             <input class="anno-input" id="anno-title-input" type="text" placeholder="제목" maxlength="80" />
@@ -1136,9 +1595,73 @@
         import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';
         import { TransformControls } from 'three/addons/controls/TransformControls.js';
         import { LCCRender } from './sdk/lcc-0.5.5.js';
+        // ── Phase 1 extracted modules ─────────────────────────────────────
+        import {
+            loadUserTeleports, saveUserTeleports,
+            loadTeleportDeletions, saveTeleportDeletions,
+            loadUserNotes, saveUserNotes,
+            loadNoteDeletions, saveNoteDeletions,
+            teleportRowKey, noteRowKey,
+        } from './modules/persistence/local-store.js';
+        import {
+            parseTeleportsCSV, parseNotesCSV,
+            escapeCsvValue, buildCsvText, downloadText,
+        } from './modules/persistence/csv-utils.js';
+        import { getCameraPose as _getCameraPose, extractSceneMatch } from './modules/utils/pose.js';
+        import { installKeyboardFilter } from './modules/ui/keyboard-filter.js';
+        // ── Phase 2 domain storage modules ────────────────────────────────
+        import {
+            TELEPORT_CSV_HEADER,
+            fetchTeleportsCSV,
+            mergeTeleportRows,
+            buildUpdatedTeleportsCsv,
+            getActiveTeleportsForScene,
+        } from './modules/teleports/teleports-storage.js';
+        import {
+            NOTES_CSV_HEADER,
+            fetchNotesCSV,
+            mergeNoteRows,
+            buildUpdatedNotesCsv,
+            getActiveNotesForScene,
+        } from './modules/notes/notes-storage.js';
+        // ── Phase 3 domain viewer modules ─────────────────────────────────
+        import {
+            buildTeleportMarker as _buildTeleportMarker,
+            buildTeleportHref as _buildTeleportHref,
+        } from './modules/teleports/teleport-marker.js';
+        import {
+            createAnnotationDOM,
+            updateAnnotationPins as _updateAnnotationPins,
+        } from './modules/notes/annotation-pins.js';
+        import {
+            updateSceneSpawn,
+            removeUserScene,
+            buildUpdatedScenesCsv,
+            scenesCsvPath,
+            detectSceneGroup,
+        } from './modules/scenes/scenes-storage.js';
 
         // ── Configuration ──
         const params = new URLSearchParams(location.search);
+        // ── Admin gate ─────────────────────────────────────────────────────
+        // ?mode=admin 일 때만 editor UI 표시 + editor 함수 호출 허용.
+        // URL 파라미터 (브라우저 주소창에서 누구나 바꿀 수 있음) 로만 체크 —
+        // 이건 진짜 "보안" 이 아니라 UX 구분 목적. 실제 보호가 필요하면 서버단 인증 필요.
+        const IS_ADMIN = params.get('mode') === 'admin';
+        if (IS_ADMIN) document.body.classList.add('admin');
+        // Setup 모드: 새 씬의 spawn 위치를 확정하기 위한 제한 UI
+        const IS_SETUP = params.get('setup') === '1' && IS_ADMIN;
+        const SETUP_GROUP = params.get('group') === 'outdoor' ? 'outdoor' : 'indoor';
+        if (IS_SETUP) document.body.classList.add('setup');
+        // editor 함수들이 호출되려 할 때 방어 — DOM 은 이미 admin-only 로 숨겨져 있어
+        // 버튼 자체를 누를 수 없지만, JS 에서 직접 트리거되는 경로 방어용.
+        function requireAdmin(fnName) {
+            if (!IS_ADMIN) {
+                console.warn(`[Viewer] ${fnName}() blocked — admin mode required (?mode=admin)`);
+                return false;
+            }
+            return true;
+        }
         const DATA_PATH = params.get('data')
             || 'https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com/voidbox-hq-lcc/260408_voidbox.lcc';
         // mesh 파라미터: 스캔 결과 mesh URL (OBJ). pin raycast 용으로 투명 로드.
@@ -1330,6 +1853,10 @@
         controls.movementSpeed = 5;
         controls.horizontalLock = true;
 
+        // INPUT/TEXTAREA/range slider 포커스 중 키 이벤트 window bubble 차단.
+        // (FirstPersonControls 의 window 레벨 Digit1~5 / W/A/S/D 충돌 방지, Escape 는 통과)
+        installKeyboardFilter({ allowKeys: ['Escape'] });
+
         // ── Resize ──
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -1410,10 +1937,16 @@
             // viewer 의 modelMatrix 가 world_Y ≡ raw_Z 이므로
             // 수직축(박스 height)은 raw Z 방향이어야 함 (scale.z 에 할당).
             // position 의 "수직 위치" 도 raw Z 축 → position.z 에.
+            // 가로 폭(X/Y 축) — splat bbox 보다 훨씬 크게 잡아 평면 방향 컷오프 제거.
+            // LCC 매니페스트 bbox 기준 수백 m 정도라 10^5 (100km) 이면 어떤 씬이든 확실히 포함.
+            // float32 정밀도도 100km 거리에서 약 1cm 수준이라 shader 문제 없음.
+            // 원점이 splat bbox 중심이 아닐 수도 있으므로 X/Y 위치는 splat bbox 중앙 근방에 맞추면 이상적이지만,
+            // 어차피 box 가 수 km 단위라 offset 무시해도 전부 덮임.
+            const CLIP_BOX_WIDE = 100000; // 100km — 거의 무제한
             lccObj.setClipBox({
                 position: { x: 0, y: 0, z: center },
                 rotation: { x: 0, y: 0, z: 0 },
-                scale: { x: 60, y: 60, z: height },
+                scale: { x: CLIP_BOX_WIDE, y: CLIP_BOX_WIDE, z: height },
                 clipSide: 1, // box 안쪽만 keep → 바깥(위쪽) clip
             });
         }
@@ -1519,12 +2052,18 @@
         // ── LCC quality / LOD control ──
         // 초기엔 LOW 로 빠르게 로드 → 사용자가 QUALITY 버튼으로 MED/HIGH 로 올림.
         // setMaxSplats: 총 splat 상한. 핵심 레버.  setEndLod: 최고 LOD 컷.  setMaxDistance: 원거리 컬.
+        // maxDistance 는 "이 거리 밖 splat 렌더 스킵" — 너무 작으면 시야 가장자리가
+        // 컷오프되어 화면이 까맣게 잘려 보임 (특히 야외 씬).
+        // 야외 LCC 씬의 실제 bbox 가 수백 m 에 달하므로 LOW 도 100m 이상 유지.
         const QUALITY_PRESETS = [
-            { label: 'LOW',  maxSplats: 2_000_000,  endLod: 2,  maxDistance: 40 },
-            { label: 'MED',  maxSplats: 6_000_000,  endLod: 3,  maxDistance: 80 },
+            { label: 'LOW',  maxSplats: 2_500_000,  endLod: 2,  maxDistance: 120 },
+            { label: 'MED',  maxSplats: 6_000_000,  endLod: 3,  maxDistance: 200 },
             { label: 'HIGH', maxSplats: 0,          endLod: 16, maxDistance: 0 },
         ];
-        let qualityIdx = 0;
+        // 초기값: 실내/실외 공통 MED — 로딩 속도와 화질의 균형점.
+        // HIGH 는 풀 해상도라 실외 씬에서 체감 로딩이 매우 길어져 기본값으론 부적합.
+        // 더 선명한 화질이 필요하면 사용자가 QUALITY 버튼으로 직접 HIGH 로 올릴 수 있음.
+        let qualityIdx = 1;
 
         // 속성 접근 시 private field 게터가 throw 할 수 있음 → 반드시 try/catch.
         function safeIsFn(obj, name) {
@@ -1708,6 +2247,16 @@
         const scanObjGroup = new THREE.Group();
         scanObjGroup.applyMatrix4(modelMatrix);
         scene.add(scanObjGroup);
+
+        // Collider 전용 그룹 — 렌더 안함(보이지 않음) + 충돌만 유발.
+        // scanObjGroup 과 분리: scan 은 pin raycast 용, 여기는 이동 제한 전용.
+        // Admin 의 "Import Collider" 로 드랍한 mesh 들이 여기에 붙는다.
+        const colliderGroup = new THREE.Group();
+        colliderGroup.applyMatrix4(modelMatrix);
+        colliderGroup.visible = false; // 통째로 렌더에서 제외
+        scene.add(colliderGroup);
+        // 디버그/전역 접근 편의
+        window._colliderGroup = colliderGroup;
 
         function loadScanMesh(url) {
             console.info('[Viewer] scan mesh loading:', url);
@@ -1925,6 +2474,93 @@
                 // 이건 조용히 두고, 실제 드롭 시점에 에러로 다시 뜸
             }
         })();
+
+        // ── Import Collider (admin) ─────────────────────────────────────
+        // OBJ/3DM 파일을 보이지 않는 collider 로 추가. 렌더 없음, 충돌만.
+        // loadedModels / objGroup 과 분리된 colliderGroup 에 붙음.
+        const $btnImportCollider = document.getElementById('btn-import-collider');
+        const $colliderFileInput = document.getElementById('collider-file-input');
+
+        function addColliderObject(obj, name) {
+            // Mesh 재료는 남겨두되 렌더링 자체가 일어나지 않으므로 시각화 의미 없음.
+            // 단순히 userData 플래그만 남김.
+            obj.traverse((c) => {
+                if (c.isMesh) c.userData.isCollider = true;
+            });
+            colliderGroup.add(obj);
+            // 자동으로 mesh collision 활성화 (없으면 collider 추가해도 무효)
+            if (!meshColliderState.enabled) {
+                meshColliderState.enabled = true;
+                if (typeof renderModelList === 'function') renderModelList();
+            }
+            const meshCount = (() => { let n = 0; obj.traverse(c => { if (c.isMesh) n++; }); return n; })();
+            console.info(`[Viewer] collider loaded: ${name} (${meshCount} mesh)`);
+            alert(`✓ Collider 추가 완료: ${name}\n(${meshCount} mesh — 보이지 않음 / 통과 불가)`);
+        }
+
+        function loadColliderObj(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const obj = objLoader.parse(e.target.result);
+                    addColliderObject(obj, file.name);
+                } catch (err) {
+                    console.error('[Viewer] collider OBJ parse failed:', err);
+                    alert(`Collider OBJ 파싱 실패: ${file.name}\n${err.message}`);
+                }
+            };
+            reader.onerror = () => console.error('[Viewer] read failed:', file.name);
+            reader.readAsText(file);
+        }
+
+        function loadCollider3dm(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const buffer = e.target.result;
+                try {
+                    rhinoLoader.parse(
+                        buffer,
+                        (object) => {
+                            let meshCount = 0;
+                            object.traverse(c => { if (c.isMesh) meshCount++; });
+                            if (meshCount === 0) {
+                                alert(`Collider 3DM 에 mesh 가 없습니다: ${file.name}\n(Rhino 에서 render mesh 저장 또는 _Mesh 후 저장 필요)`);
+                                return;
+                            }
+                            addColliderObject(object, file.name);
+                        },
+                        (err) => {
+                            console.error('[Viewer] collider 3DM parse failed:', err);
+                            alert(`Collider 3DM 파싱 실패: ${file.name}\n${err?.message || err}`);
+                        },
+                    );
+                } catch (err) {
+                    console.error('[Viewer] collider 3DM parse threw:', err);
+                    alert(`Collider 3DM 로딩 오류: ${file.name}\n${err?.message || err}`);
+                }
+            };
+            reader.onerror = () => alert(`파일 읽기 실패: ${file.name}`);
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleColliderFiles(fileList) {
+            const files = Array.from(fileList || []);
+            let matched = 0;
+            for (const f of files) {
+                if (/\.obj$/i.test(f.name))      { loadColliderObj(f); matched++; }
+                else if (/\.3dm$/i.test(f.name)) { loadCollider3dm(f); matched++; }
+            }
+            if (matched === 0) alert('지원 형식: .obj, .3dm');
+        }
+
+        $btnImportCollider?.addEventListener('click', () => {
+            if (!requireAdmin('importCollider')) return;
+            $colliderFileInput.click();
+        });
+        $colliderFileInput?.addEventListener('change', (e) => {
+            if (e.target.files?.length) handleColliderFiles(e.target.files);
+            $colliderFileInput.value = ''; // 같은 파일 재선택 가능
+        });
 
         function handleFiles(fileList) {
             const files = Array.from(fileList);
@@ -2362,35 +2998,9 @@
             target.add(anchor);
 
             const id = ++annotationIdSeq;
-            const $pin = document.createElement('button');
-            $pin.type = 'button';
-            $pin.className = 'anno-pin';
-            $pin.textContent = '+';
-            $pin.title = title || '(제목 없음)';
-
-            // 말풍선 (제목 + 내용 + Edit / Delete 액션)
-            const $bubble = document.createElement('div');
-            $bubble.className = 'anno-bubble hidden';
-            const $bubbleTitle = document.createElement('div');
-            $bubbleTitle.className = 'anno-bubble-title';
-            const $bubbleBody = document.createElement('div');
-            $bubbleBody.className = 'anno-bubble-body';
-            const $bubbleActions = document.createElement('div');
-            $bubbleActions.className = 'anno-bubble-actions';
-            const $bubbleEdit = document.createElement('button');
-            $bubbleEdit.className = 'anno-bubble-btn';
-            $bubbleEdit.type = 'button';
-            $bubbleEdit.textContent = 'Edit';
-            const $bubbleDelete = document.createElement('button');
-            $bubbleDelete.className = 'anno-bubble-btn';
-            $bubbleDelete.type = 'button';
-            $bubbleDelete.textContent = 'Delete';
-            $bubbleActions.appendChild($bubbleEdit);
-            $bubbleActions.appendChild($bubbleDelete);
-            $bubble.appendChild($bubbleTitle);
-            $bubble.appendChild($bubbleBody);
-            $bubble.appendChild($bubbleActions);
-            document.body.appendChild($bubble);
+            // DOM 생성은 modules/notes/annotation-pins.js 로 이동
+            const { $pin, $bubble, $bubbleEdit, $bubbleDelete } =
+                createAnnotationDOM({ title, body });
 
             $pin.addEventListener('click', (ev) => {
                 ev.stopPropagation();
@@ -2434,17 +3044,16 @@
                 }
             });
 
-            // 말풍선 내부 클릭 시 배경 클릭(선택 해제 등)으로 버블링 안되게
-            $bubble.addEventListener('click', (ev) => ev.stopPropagation());
-
-            document.body.appendChild($pin);
+            // ($pin, $bubble 은 createAnnotationDOM 이 이미 document.body 에 append + bubble 내부 click stop 처리)
 
             // hidesTarget 이면 메시 숨김 → 핀만 공중에 떠 있는 효과
             if (hidesTarget) {
                 target.visible = false;
             }
 
-            annotations.push({ id, target, anchor, title, body, $pin, $bubble, hidesTarget: !!hidesTarget });
+            const annoObj = { id, target, anchor, title, body, $pin, $bubble, hidesTarget: !!hidesTarget, saved: false };
+            annotations.push(annoObj);
+            return annoObj;
         }
 
         function removeAnnotation(id) {
@@ -2455,6 +3064,8 @@
             if (a.hidesTarget && a.target) {
                 a.target.visible = true;
             }
+            // 저장된 노트 삭제면 deletions 기록 (CSV 재생성 시 제외)
+            if (typeof markNoteDeleted === 'function') markNoteDeleted(a);
             a.target?.remove?.(a.anchor);
             a.$pin?.remove();
             a.$bubble?.remove();
@@ -2487,6 +3098,7 @@
         }
 
         $btnAnnotate.addEventListener('click', () => {
+            if (!requireAdmin('addNote')) return;
             if (annotationPlacingMode) {
                 setPlacingMode(false);
                 return;
@@ -2502,6 +3114,7 @@
         // + INV NOTE : 반드시 mesh 가 선택돼 있어야 함.
         // 저장 시 createAnnotation 이 target.visible=false 로 설정 → 메시는 사라지고 + 핀만 남음.
         $btnAnnotateInvis.addEventListener('click', () => {
+            if (!requireAdmin('addInvisibleNote')) return;
             if (annotationPlacingMode) {
                 setPlacingMode(false);
             }
@@ -2523,6 +3136,9 @@
                     a.title = title;
                     a.body = body;
                     a.$pin.title = title;
+                    // 편집 시 저장 상태 해제 → 빨강으로 다시 표시
+                    a.saved = false;
+                    a.$pin.classList.add('unsaved');
                     // 열려 있던 말풍선 내용도 동기화
                     if (a.$bubble) {
                         const $t = a.$bubble.querySelector('.anno-bubble-title');
@@ -2578,6 +3194,95 @@
             }
         });
 
+        // ══════════════════════════════════════════════════════════════════
+        // Notes persistence (SAVE NOTES → notes.csv + localStorage)
+        // localStorage 헬퍼 / CSV 파서 / rowKey 는 modules/persistence/* 로 이동.
+        // ══════════════════════════════════════════════════════════════════
+
+        // buildUpdatedNotesCsv 는 modules/notes/notes-storage.js 로 이동 (import 됨).
+
+        // SAVE NOTES — 이 씬의 모든 노트를 CSV + localStorage 에 저장
+        async function saveAllNotes() {
+            if (!requireAdmin('saveAllNotes')) return;
+            const sceneMatch = extractSceneMatch(DATA_PATH);
+            const worldPos = new THREE.Vector3();
+            const currentSceneRows = [];
+            for (const a of annotations) {
+                a.anchor.getWorldPosition(worldPos);
+                currentSceneRows.push({
+                    scene_match: sceneMatch,
+                    world_px: +worldPos.x.toFixed(3),
+                    world_py: +worldPos.y.toFixed(3),
+                    world_pz: +worldPos.z.toFixed(3),
+                    title: a.title || '',
+                    body: a.body || '',
+                });
+            }
+            // localStorage userNotes 에서 현재 씬 행 전부 치환
+            const allUser = loadUserNotes();
+            const otherScene = allUser.filter(r => r.scene_match !== sceneMatch);
+            saveUserNotes([...otherScene, ...currentSceneRows]);
+            // 현재 씬의 삭제 기록은 "현재 씬에 존재하는" 키들만 남기고 clean up
+            const currentKeys = new Set(currentSceneRows.map(r => noteRowKey(r.scene_match, r.world_px, r.world_py, r.world_pz)));
+            const deletions = loadNoteDeletions().filter(k => !currentKeys.has(k));
+            saveNoteDeletions(deletions);
+
+            // 화면 핀 빨강 → 파랑
+            for (const a of annotations) {
+                a.saved = true;
+                a.$pin.classList.remove('unsaved');
+            }
+
+            // CSV 다운로드
+            const csvText = await buildUpdatedNotesCsv();
+            console.info('─── notes.csv after save (덮어쓰기용) ───');
+            console.info(csvText);
+            downloadText('notes.csv', csvText);
+            console.info(`[Viewer] ${currentSceneRows.length} note(s) saved for scene "${sceneMatch}"`);
+        }
+
+        document.getElementById('btn-save-notes')?.addEventListener('click', saveAllNotes);
+
+        // 로드 시 CSV + localStorage 에서 현재 씬의 노트를 복원
+        async function loadNotes() {
+            const sceneMatch = extractSceneMatch(DATA_PATH);
+            // Phase 2: storage 모듈이 CSV + user + deletions 를 다 합쳐서 현재 씬의 note 만 돌려줌
+            const sceneNotes = await getActiveNotesForScene(sceneMatch, './notes.csv');
+            for (const r of sceneNotes) {
+                const wp = new THREE.Vector3(
+                    parseFloat(r.world_px), parseFloat(r.world_py), parseFloat(r.world_pz)
+                );
+                // 저장된 노트는 scene root 에 고정 attach (어떤 mesh 에 붙었는지는 영구 보존 불가)
+                const a = createAnnotation(scene, wp, r.title || '', r.body || '', false);
+                if (a) {
+                    a.saved = true;
+                    a.$pin.classList.remove('unsaved');
+                }
+            }
+            console.info(`[Viewer] loaded ${sceneNotes.length} note(s) for scene "${sceneMatch}"`);
+        }
+        // LCC 로드와 독립적으로 가능 — 즉시 호출
+        // (setup 모드에선 텔레포트/노트 전부 숨김 — spawn 만 결정하는 단계)
+        if (!IS_SETUP) loadNotes();
+
+        // 노트 삭제 시 저장된 것이면 deletions 에 기록 → CSV 출력에서도 제외되도록
+        function markNoteDeleted(a) {
+            if (!a || !a.saved) return;
+            const sceneMatch = extractSceneMatch(DATA_PATH);
+            const worldPos = new THREE.Vector3();
+            a.anchor.getWorldPosition(worldPos);
+            const key = noteRowKey(sceneMatch, worldPos.x, worldPos.y, worldPos.z);
+            const dels = loadNoteDeletions();
+            if (!dels.includes(key)) { dels.push(key); saveNoteDeletions(dels); }
+            // localStorage userNotes 에도 있으면 제거
+            const userRows = loadUserNotes().filter(r =>
+                !(r.scene_match === sceneMatch &&
+                  Math.abs(parseFloat(r.world_px) - worldPos.x) < 0.1 &&
+                  Math.abs(parseFloat(r.world_pz) - worldPos.z) < 0.1)
+            );
+            saveUserNotes(userRows);
+        }
+
         // 모델 삭제 시 해당 모델에 붙어있던 annotation 정리
         // (deleteSelected 가 호출될 때 traverse 이전에 cleanup)
         function cleanupAnnotationsFor(obj) {
@@ -2594,47 +3299,9 @@
         // 기존 selection/drag 로직과 분기. (기존 핸들러에서 annotationPlacingMode 체크해서
         // 분기하는 코드는 아래 선택 raycast 로직 수정 시점에 추가.)
 
-        // 매 프레임 핀 위치 갱신: annotation.anchor 의 world pos → 스크린 좌표.
-        const _annoWorld = new THREE.Vector3();
-        const _annoView = new THREE.Vector3();
+        // 매 프레임 핀 위치 갱신 — 본체는 modules/notes/annotation-pins.js 로 이동.
         function updateAnnotationPins() {
-            if (annotations.length === 0) return;
-            // 카메라 변환 최신화 (FirstPersonControls / gizmo 가 방금 바꿨을 수 있음)
-            camera.updateMatrixWorld();
-            const invView = camera.matrixWorldInverse;
-            const hw = window.innerWidth / 2;
-            const hh = window.innerHeight / 2;
-
-            for (const a of annotations) {
-                // anchor 의 parent 변환이 갱신되지 않았을 수 있음 → 강제 업데이트
-                a.anchor.updateMatrixWorld(true);
-                a.anchor.getWorldPosition(_annoWorld);
-
-                // 카메라 뒤쪽 여부는 view-space z > 0 으로 판정 (Three.js 카메라는 -Z 방향을 봄)
-                _annoView.copy(_annoWorld).applyMatrix4(invView);
-                if (_annoView.z >= 0) {
-                    a.$pin.classList.add('hidden');
-                    if (a.$bubble) a.$bubble.classList.add('hidden');
-                    continue;
-                }
-
-                // 카메라 앞쪽이면 projection (NDC [-1, 1]) → 픽셀 좌표
-                _annoWorld.project(camera);
-                const x = _annoWorld.x * hw + hw;
-                const y = -_annoWorld.y * hh + hh;
-
-                a.$pin.classList.remove('hidden');
-                // translate3d 로 GPU 가속 + sub-pixel 정밀도 유지
-                a.$pin.style.transform =
-                    `translate3d(${x - 16}px, ${y - 16}px, 0)`;
-
-                // 말풍선은 핀 오른쪽으로 붙임 (꼬리가 좌측을 가리킴).
-                // 핀 크기 32px, 여백 10px → 핀 우측 가장자리 + 10
-                if (a.$bubble && !a.$bubble.classList.contains('hidden')) {
-                    a.$bubble.style.transform =
-                        `translate3d(${x + 26}px, ${y - 18}px, 0)`;
-                }
-            }
+            _updateAnnotationPins({ THREE, annotations, camera });
         }
 
         // ── Mesh collision (raycast ring) ──
@@ -2651,14 +3318,25 @@
 
         function applyMeshCollision() {
             if (!meshColliderState.enabled) return;
-            if (loadedModels.length === 0) return;
-            // 보이는 모델의 메시만 수집
+            // 충돌 대상 mesh 수집: (1) 보이는 loadedModels  (2) invisible colliderGroup 전체
             const meshes = [];
             for (const m of loadedModels) {
                 if (!m.visible) continue;
                 m.object.traverse((c) => {
                     if (c.isMesh) meshes.push(c);
                 });
+            }
+            // colliderGroup 은 group.visible = false 라 raycaster 기본 동작에선
+            // 건너뛰지만, 아래 loop 는 자식 mesh 를 직접 배열에 넣으므로 강제 수집됨.
+            // (raycaster.intersectObjects 는 각 target 의 .visible 도 체크하므로 임시로 true 로 둘 필요)
+            const colliderMeshes = [];
+            if (colliderGroup && colliderGroup.children.length > 0) {
+                colliderGroup.traverse((c) => {
+                    if (c.isMesh) colliderMeshes.push(c);
+                });
+                // 임시로 mesh 들만 visible 켜서 raycaster 가 찾도록. group 자체는 여전히 invisible.
+                for (const c of colliderMeshes) c._origVisible = c.visible, c.visible = true;
+                meshes.push(...colliderMeshes);
             }
             if (meshes.length === 0) return;
             _meshRaycaster.far = PLAYER_RADIUS;
@@ -2671,6 +3349,8 @@
                     camera.position.z -= dir.z * penetration;
                 }
             }
+            // collider mesh 들의 visible 상태 복원 (colliderGroup.visible=false 이므로 어차피 렌더 안됨)
+            for (const c of colliderMeshes) c.visible = c._origVisible ?? true;
         }
 
         // ── Render loop ──
@@ -2766,36 +3446,26 @@
         let activeTeleports = [];      // { trigger: Vector3, radius, destUrl, destPx/Py/Pz, destYaw, destPitch, label }
         let currentTeleport = null;    // 현재 범위 안의 가장 가까운 teleport (버튼에 바인딩)
 
-        function parseTeleportsCSV(text) {
-            const lines = text.trim().split(/\r?\n/);
-            if (lines.length < 2) return [];
-            const header = lines[0].split(',').map(h => h.trim());
-            const rows = [];
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i];
-                if (!line.trim()) continue;
-                // URL 은 percent-encode 돼 있어 쉼표 없음 → 단순 split
-                const parts = line.split(',').map(p => p.trim());
-                const row = {};
-                header.forEach((k, j) => { row[k] = parts[j]; });
-                rows.push(row);
-            }
-            return rows;
-        }
+        // parseTeleportsCSV 는 modules/persistence/csv-utils.js 로 이동.
+
+        // teleport/note 관련 localStorage 헬퍼는 modules/persistence/local-store.js 로 이동.
+        // loadDeletions / saveDeletions 는 하위호환을 위해 해당 모듈의 teleport 전용에 매핑.
+        const loadDeletions = loadTeleportDeletions;
+        const saveDeletions = saveTeleportDeletions;
 
         async function loadTeleports() {
             try {
-                const res = await fetch('./teleports.csv');
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const rows = parseTeleportsCSV(await res.text());
+                // Phase 2: storage 모듈이 CSV fetch + user merge + deletions 필터 + scene 필터까지 수행
+                const rows = await getActiveTeleportsForScene(DATA_PATH, './teleports.csv');
                 activeTeleports = rows
-                    .filter(r => r.scene_match && DATA_PATH && DATA_PATH.includes(r.scene_match))
                     .map(r => {
                         const trigPy = parseFloat(r.trigger_py);
                         // marker_y: 링 시각적 Y (바닥 높이). 지정 없으면 trigger_py - 1.5 (눈↔바닥 보정).
                         const markerY = (r.marker_y !== undefined && r.marker_y !== '')
                             ? parseFloat(r.marker_y)
                             : trigPy - 1.5;
+                        const arrowYawDeg = (r.arrow_yaw !== undefined && r.arrow_yaw !== '')
+                            ? parseFloat(r.arrow_yaw) : 0;
                         return {
                             trigger: new THREE.Vector3(
                                 parseFloat(r.trigger_px),
@@ -2803,6 +3473,7 @@
                                 parseFloat(r.trigger_pz),
                             ),
                             markerY,
+                            arrowYaw: arrowYawDeg * (Math.PI / 180), // rad
                             radius: parseFloat(r.radius) || 3.0,
                             destUrl: r.dest_url,
                             destPx: r.dest_px, destPy: r.dest_py, destPz: r.dest_pz,
@@ -2821,96 +3492,530 @@
                 activeTeleports = [];
             }
         }
-        loadTeleports();
+        if (!IS_SETUP) loadTeleports();
 
         // Teleport 마커: 바닥에 깔린 빛나는 이중 링 + 중심 디스크.
         // 재질은 additive blending 으로 배경과 상관없이 잘 보이게 함.
-        function buildTeleportMarker(t) {
-            const group = new THREE.Group();
-            // 링/기둥의 시각적 위치는 markerY (바닥 높이) 를 사용. trigger X/Z 는 그대로.
-            group.position.set(t.trigger.x, t.markerY ?? t.trigger.y, t.trigger.z);
-
-            const color = 0x5cc8ff; // 시안 계열
-
-            // 바깥 링 (두꺼운 토러스 형태)
-            const outerGeom = new THREE.RingGeometry(0.95, 1.15, 64);
-            const outerMat = new THREE.MeshBasicMaterial({
-                color, transparent: true, opacity: 0.9,
-                side: THREE.DoubleSide, depthWrite: false,
-                blending: THREE.AdditiveBlending,
-            });
-            const outerRing = new THREE.Mesh(outerGeom, outerMat);
-            outerRing.rotation.x = -Math.PI / 2;
-            group.add(outerRing);
-
-            // 안쪽 링 (가늘게) — 반대 방향으로 회전시켜 포탈 느낌
-            const innerGeom = new THREE.RingGeometry(0.55, 0.72, 48);
-            const innerMat = new THREE.MeshBasicMaterial({
-                color, transparent: true, opacity: 0.7,
-                side: THREE.DoubleSide, depthWrite: false,
-                blending: THREE.AdditiveBlending,
-            });
-            const innerRing = new THREE.Mesh(innerGeom, innerMat);
-            innerRing.rotation.x = -Math.PI / 2;
-            group.add(innerRing);
-
-            // 중심 디스크 (은은한 글로우)
-            const discGeom = new THREE.CircleGeometry(1.15, 64);
-            const discMat = new THREE.MeshBasicMaterial({
-                color, transparent: true, opacity: 0.18,
-                side: THREE.DoubleSide, depthWrite: false,
-                blending: THREE.AdditiveBlending,
-            });
-            const disc = new THREE.Mesh(discGeom, discMat);
-            disc.rotation.x = -Math.PI / 2;
-            disc.position.y = 0.001; // z-fighting 방지
-            group.add(disc);
-
-            // 수직 빛기둥 — 하늘까지 위로만 뻗음.
-            // 아래로는 연장하지 않아서 바닥(Gaussian Splat 지면)을 뚫고 나오지 않음.
-            // Splat 은 depth 를 제대로 쓰지 않아 완벽한 occlusion 은 어렵지만,
-            // 적어도 링보다 아래쪽으로는 기둥이 그려지지 않게 함.
-            const PILLAR_HEIGHT = 500;
-            const pillarGeom = new THREE.CylinderGeometry(0.9, 0.9, PILLAR_HEIGHT, 32, 1, true);
-            const pillarMat = new THREE.MeshBasicMaterial({
-                color, transparent: true, opacity: 0.10,
-                side: THREE.DoubleSide, depthWrite: false,
-                blending: THREE.AdditiveBlending,
-            });
-            const pillar = new THREE.Mesh(pillarGeom, pillarMat);
-            // 기둥 바닥이 링 위치에서 시작하도록 — 링 아래로는 그리지 않음
-            pillar.position.y = PILLAR_HEIGHT / 2;
-            group.add(pillar);
-            const pillarDown = null; // 제거됨 (바닥 관통 방지)
-
-            // 마커가 충돌/선택/raycast 에 걸리지 않도록 layer 분리.
-            // SCAN_LAYER 와 같은 철학: 카메라는 레이어 0 만 보지만, 여기선 오히려
-            // 카메라(layer 0)가 봐야 하므로 그대로 두되, 각 mesh 의 userData 에 플래그.
-            group.traverse((c) => {
-                c.userData.isTeleportMarker = true;
-                c.userData.noCollide = true;
-            });
-
-            // 애니메이션 상태 — render 루프에서 시간 기반으로 업데이트
-            group.userData._anim = { outerRing, innerRing, disc, pillar, pillarDown };
-            return group;
-        }
-
-        function buildTeleportHref(t) {
-            const qs = new URLSearchParams();
-            qs.set('data', t.destUrl);
-            if (t.destPx) qs.set('px', t.destPx);
-            if (t.destPy) qs.set('py', t.destPy);
-            if (t.destPz) qs.set('pz', t.destPz);
-            if (t.destYaw) qs.set('yaw', t.destYaw);
-            if (t.destPitch) qs.set('pitch', t.destPitch);
-            return `./viewer.html?${qs.toString()}`;
-        }
+        // buildTeleportMarker / buildTeleportHref 는 modules/teleports/teleport-marker.js 로 이동.
+        // 기존 호출부 호환을 위한 박막 wrapper (THREE 주입).
+        const buildTeleportMarker = (t) => _buildTeleportMarker(THREE, t);
+        const buildTeleportHref   = (t) => _buildTeleportHref(t, './viewer.html');
 
         $teleportBtn.addEventListener('click', () => {
             if (!currentTeleport) return;
             location.href = buildTeleportHref(currentTeleport);
         });
+
+        // ── Teleport edit mode (화살표 회전) ──
+        const $teleportEditBtn = document.getElementById('teleport-edit-btn');
+        const $teleportRotatePanel = document.getElementById('teleport-rotate-panel');
+        const $teleportRotateRange = document.getElementById('teleport-rotate-range');
+        const $teleportRotateVal = document.getElementById('teleport-rotate-val');
+        const $teleportHeightRange = document.getElementById('teleport-height-range');
+        const $teleportHeightVal = document.getElementById('teleport-height-val');
+        const $teleportRotateDone = document.getElementById('teleport-rotate-done');
+        let editingTeleport = null; // 편집 중인 teleport 객체. null 이면 편집 off
+
+        function enterTeleportEdit(t) {
+            if (!requireAdmin('enterTeleportEdit')) return;
+            if (!t || !t.marker) return;
+            editingTeleport = t;
+            // 진입 시점 값 스냅샷 — 변경 여부 판단용
+            t._origArrowYaw = t.arrowYaw ?? 0;
+            t._origMarkerY = (typeof t.markerY === 'number' ? t.markerY : (t.trigger.y - 1.5));
+            // 현재 arrowGroup 의 회전 (rad) → deg 로 슬라이더 초기화
+            const arrowGroup = t.marker.userData._anim?.arrowGroup;
+            const curDeg = Math.round(((arrowGroup?.rotation.y ?? t.arrowYaw) * 180 / Math.PI));
+            let d = ((curDeg + 540) % 360) - 180;
+            $teleportRotateRange.value = String(d);
+            $teleportRotateVal.textContent = `${d}°`;
+            // 높이 슬라이더: 현재 markerY 중심으로 ±4m 범위. step 0.05m.
+            const curY = t._origMarkerY;
+            $teleportHeightRange.min = (curY - 4).toFixed(2);
+            $teleportHeightRange.max = (curY + 4).toFixed(2);
+            $teleportHeightRange.step = '0.05';
+            $teleportHeightRange.value = curY.toFixed(2);
+            $teleportHeightVal.textContent = curY.toFixed(2);
+            // UI 토글
+            $teleportRotatePanel.classList.remove('hidden');
+            $teleportBtn.classList.add('hidden');
+            $teleportEditBtn.classList.add('hidden');
+            // FPS 컨트롤은 활성 상태 유지 — WASD/R/F 이동, 마우스 드래그 카메라 회전 모두 가능.
+            // 슬라이더는 별도 DOM 이라 pointerdown 이 canvas 로 전파되지 않아 자연스럽게 카메라 회전은 막힘.
+            // (편집 중 시점을 돌려서 화살표/링을 여러 각도에서 확인하거나, 옆으로 걸어가며 조정 가능)
+        }
+
+        // 편집 결과를 localStorage userRows 에 반영 (기존 row 업데이트 or 새 override row 추가).
+        // CSV 에 있는 정적 텔레포트도 편집하면 localStorage 쪽으로 복사돼 dedup 로직이 user row 우선.
+        function persistTeleportEdit(t) {
+            const sceneMatch = extractSceneMatch(DATA_PATH);
+            const userRows = loadUserTeleports();
+            const idx = userRows.findIndex(r =>
+                r.scene_match === sceneMatch &&
+                Math.abs(parseFloat(r.trigger_px) - t.trigger.x) < 0.1 &&
+                Math.abs(parseFloat(r.trigger_pz) - t.trigger.z) < 0.1
+            );
+            const row = {
+                scene_match: sceneMatch,
+                trigger_px: +t.trigger.x.toFixed(3),
+                trigger_py: +t.trigger.y.toFixed(3),
+                trigger_pz: +t.trigger.z.toFixed(3),
+                radius: t.radius ?? 3.0,
+                marker_y: +t.markerY.toFixed(2),
+                arrow_yaw: +((t.arrowYaw ?? 0) * RAD2DEG).toFixed(2),
+                dest_url: t.destUrl ?? '',
+                dest_px: t.destPx ?? '',
+                dest_py: t.destPy ?? '',
+                dest_pz: t.destPz ?? '',
+                dest_yaw: t.destYaw ?? '',
+                dest_pitch: t.destPitch ?? '',
+                label: t.label ?? '이동하기',
+            };
+            if (idx >= 0) userRows[idx] = row;
+            else userRows.push(row);
+            saveUserTeleports(userRows);
+            return row;
+        }
+
+        async function exitTeleportEdit() {
+            if (!editingTeleport) return;
+            const t = editingTeleport;
+            // YAW 반영
+            const finalDeg = parseFloat($teleportRotateRange.value) || 0;
+            t.arrowYaw = finalDeg * (Math.PI / 180);
+            const arrowGroup = t.marker?.userData._anim?.arrowGroup;
+            if (arrowGroup) arrowGroup.rotation.y = t.arrowYaw;
+            // 높이 반영
+            const finalY = parseFloat($teleportHeightRange.value);
+            if (!Number.isNaN(finalY)) {
+                t.markerY = finalY;
+                if (t.marker) t.marker.position.y = finalY;
+            }
+
+            // 변경 여부 확인 → 변경된 경우에만 저장 + CSV 다운로드
+            const yawChanged = Math.abs(t.arrowYaw - (t._origArrowYaw ?? 0)) > 1e-5;
+            const heightChanged = Math.abs(t.markerY - (t._origMarkerY ?? 0)) > 1e-3;
+            if (yawChanged || heightChanged) {
+                const saved = persistTeleportEdit(t);
+                console.info('[Viewer] teleport edit persisted:', saved);
+                try {
+                    const csvText = await buildUpdatedTeleportsCsv();
+                    console.info('─── teleports.csv after edit (덮어쓰기용) ───');
+                    console.info(csvText);
+                    downloadText('teleports.csv', csvText);
+                } catch (e) { console.warn('[Viewer] csv build failed:', e); }
+            } else {
+                console.info('[Viewer] edit DONE — no change');
+            }
+
+            editingTeleport = null;
+            $teleportRotatePanel.classList.add('hidden');
+            if (controls) controls.enabled = true;
+        }
+
+        $teleportEditBtn.addEventListener('click', () => {
+            if (!requireAdmin('teleportEditBtn')) return;
+            if (currentTeleport) enterTeleportEdit(currentTeleport);
+        });
+
+        $teleportRotateRange.addEventListener('input', (e) => {
+            if (!editingTeleport) return;
+            const deg = parseFloat(e.target.value);
+            $teleportRotateVal.textContent = `${deg}°`;
+            const arrowGroup = editingTeleport.marker?.userData._anim?.arrowGroup;
+            if (arrowGroup) arrowGroup.rotation.y = deg * (Math.PI / 180);
+        });
+
+        $teleportHeightRange.addEventListener('input', (e) => {
+            if (!editingTeleport) return;
+            const y = parseFloat(e.target.value);
+            $teleportHeightVal.textContent = y.toFixed(2);
+            if (editingTeleport.marker) editingTeleport.marker.position.y = y;
+        });
+
+        $teleportRotateDone.addEventListener('click', exitTeleportEdit);
+
+        // 편집 중인 텔레포트를 씬/activeTeleports 에서 제거하는 헬퍼
+        function removeTeleportFromScene(t) {
+            if (!t) return;
+            if (t.marker && t.marker.parent) scene.remove(t.marker);
+            const idx = activeTeleports.indexOf(t);
+            if (idx >= 0) activeTeleports.splice(idx, 1);
+        }
+
+        // 현재 편집 중인 텔레포트에 대응하는 rowKey 한 쌍 계산 (이쪽 / 반대쪽)
+        function collectTeleportPairKeys(t) {
+            const keys = [];
+            const srcMatch = extractSceneMatch(DATA_PATH);
+            keys.push(teleportRowKey(srcMatch, t.trigger.x, t.trigger.z));
+            if (t.destUrl && t.destPx !== undefined && t.destPz !== undefined) {
+                const destMatch = extractSceneMatch(t.destUrl);
+                keys.push(teleportRowKey(destMatch, t.destPx, t.destPz));
+            }
+            return keys;
+        }
+
+        // 🗑 삭제 버튼
+        const $tpDelete = document.getElementById('teleport-delete');
+        $tpDelete?.addEventListener('click', async () => {
+            if (!editingTeleport) return;
+            if (!confirm('이 텔레포트를 삭제합니다.\n연결된 반대 방향도 함께 제거됩니다. 계속할까요?')) return;
+            const t = editingTeleport;
+            const pairKeys = collectTeleportPairKeys(t);
+
+            // localStorage user rows 에서 제거 (해당 키들)
+            const userRows = loadUserTeleports();
+            const filteredUser = userRows.filter(r => {
+                const k = teleportRowKey(r.scene_match, r.trigger_px, r.trigger_pz);
+                return !pairKeys.includes(k);
+            });
+            saveUserTeleports(filteredUser);
+            // 정적 CSV 에도 있을 수 있으니 deletions 에 기록 (CSV 에서 제외시킴)
+            const deletions = loadDeletions();
+            for (const k of pairKeys) if (!deletions.includes(k)) deletions.push(k);
+            saveDeletions(deletions);
+
+            // 씬에서 즉시 제거 (현재 씬의 마커만 — 반대쪽은 그 씬에 들어가야 지워짐)
+            removeTeleportFromScene(t);
+
+            // CSV 재생성 + 다운로드
+            const csvText = await buildUpdatedTeleportsCsv();
+            console.info('─── teleports.csv after delete (덮어쓰기용) ───');
+            console.info(csvText);
+            downloadText('teleports.csv', csvText);
+
+            // 편집 UI 닫기
+            editingTeleport = null;
+            $teleportRotatePanel.classList.add('hidden');
+            if (controls) controls.enabled = true;
+            alert('텔레포트 삭제 완료.\n업데이트된 teleports.csv 가 다운로드 됐어요.');
+        });
+
+        // 🔗 씬 변경 버튼 — 이 텔레포트의 출발점은 유지하고 도착점(씬+위치)만 교체
+        const $tpChangeScene = document.getElementById('teleport-change-scene');
+        $tpChangeScene?.addEventListener('click', async () => {
+            if (!editingTeleport) return;
+            const t = editingTeleport;
+            // 현재 화살표 yaw (편집 중 변경됐으면 반영)
+            const arrowGroup = t.marker?.userData._anim?.arrowGroup;
+            const curArrowRad = arrowGroup?.rotation.y ?? t.arrowYaw ?? 0;
+            const curArrowDeg = +(curArrowRad * RAD2DEG).toFixed(2);
+
+            // pending 상태 세팅 — mode=replace
+            const oldKeys = collectTeleportPairKeys(t);
+            const pending = {
+                step: 'picking_scene',
+                mode: 'replace',
+                source: {
+                    url: DATA_PATH,
+                    px: +t.trigger.x.toFixed(3),
+                    py: +t.trigger.y.toFixed(3),
+                    pz: +t.trigger.z.toFixed(3),
+                    yaw: curArrowDeg,
+                    pitch: 0,
+                },
+                srcSceneName: document.title || '출발지',
+                oldKeys,
+                // 기존 arrow_yaw / marker_y 를 그대로 이어쓸 수 있게 보존
+                sourceArrowYawDeg: curArrowDeg,
+                sourceMarkerY: (typeof t.markerY === 'number' ? t.markerY : (t.trigger.y - 1.5)),
+            };
+            sessionStorage.setItem(TP_SS_KEY, JSON.stringify(pending));
+
+            // 편집 UI 닫고 씬 선택 모달 열기
+            editingTeleport = null;
+            $teleportRotatePanel.classList.add('hidden');
+            if (controls) controls.enabled = true;
+            tpState = 'picking_scene';
+            await openScenePicker();
+        });
+
+        // ══════════════════════════════════════════════════════════════════
+        // Teleport creation wizard (+ TELEPORT 버튼)
+        // 1) 현재 위치에서 "여기로 하기" → source pose 저장
+        // 2) 씬 목록 모달 → 목적 씬 선택 → 해당 씬으로 navigate (pending 상태를 sessionStorage 로 가지고 감)
+        // 3) 목적 씬에서 자동으로 step 2 UI 진입 → "여기로 하기" → dest pose 저장
+        // 4) 쌍방 텔레포트 2행 생성 → localStorage 저장 + CSV 자동 다운로드
+        // ══════════════════════════════════════════════════════════════════
+        const TP_SS_KEY = 'voidbox.pendingTeleport.v1';
+        const $btnTpCreate = document.getElementById('btn-teleport-create');
+        const $tpPlacePanel = document.getElementById('tp-place-panel');
+        const $tpStepLabel = document.getElementById('tp-step-label');
+        const $tpHereBtn = document.getElementById('tp-here-btn');
+        const $tpCancelBtn = document.getElementById('tp-cancel-btn');
+        const $tpSceneModal = document.getElementById('tp-scene-modal');
+        const $tpSceneListIndoor = document.getElementById('tp-scene-list-indoor');
+        const $tpSceneListOutdoor = document.getElementById('tp-scene-list-outdoor');
+        const $tpSceneCancel = document.getElementById('tp-scene-cancel');
+
+        let tpState = 'idle'; // idle | placing_source | picking_scene | placing_dest
+
+        // extractSceneMatch 는 modules/utils/pose.js 에서 import.
+        // getCameraPose 는 _getCameraPose(THREE, camera) 로 노출 → 이 파일 스코프에서
+        // 기존 호출부가 인자 없이 getCameraPose() 로 쓰던 것 유지하려고 박막 wrapper.
+        function getCameraPose() { return _getCameraPose(THREE, camera); }
+
+        function showTpPlacePanel(step) {
+            $tpStepLabel.textContent = step === 1 ? 'STEP 1 / 2  (출발점)' : 'STEP 2 / 2  (도착점)';
+            $tpPlacePanel.classList.remove('hidden');
+        }
+        function hideTpPlacePanel() { $tpPlacePanel.classList.add('hidden'); }
+        function hideTpSceneModal() { $tpSceneModal.classList.remove('open'); }
+
+        // 씬 목록 불러오기 (실내 + 실외 합침)
+        async function loadAllScenes() {
+            const out = [];
+            for (const [path, group] of [['./scenes.csv', '실내'], ['./scenes-outdoor.csv', '실외']]) {
+                try {
+                    const res = await fetch(path);
+                    if (!res.ok) continue;
+                    const txt = await res.text();
+                    const lines = txt.trim().split(/\r?\n/);
+                    const header = lines[0].split(',').map(h => h.trim());
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i]; if (!line.trim()) continue;
+                        const parts = line.split(',').map(p => p.trim());
+                        const row = { _group: group };
+                        header.forEach((k, j) => { if (parts[j] !== undefined && parts[j] !== '') row[k] = parts[j]; });
+                        if (row.name && row.url) out.push(row);
+                    }
+                } catch (e) { console.warn('[Viewer] scene list load fail:', path, e); }
+            }
+            return out;
+        }
+
+        async function openScenePicker() {
+            const loading = '<div style="padding:12px;color:#888;">불러오는 중…</div>';
+            $tpSceneListIndoor.innerHTML = loading;
+            $tpSceneListOutdoor.innerHTML = loading;
+            $tpSceneModal.classList.add('open');
+            const scenes = await loadAllScenes();
+            // 현재 씬 제외
+            const filtered = scenes.filter(s => !DATA_PATH.includes(extractSceneMatch(s.url)));
+            const indoor = filtered.filter(s => s._group === '실내');
+            const outdoor = filtered.filter(s => s._group === '실외');
+
+            function renderCol($col, rows, emptyMsg) {
+                if (rows.length === 0) {
+                    $col.innerHTML = `<div style="padding:12px;color:#888;font-size:12px;">${emptyMsg}</div>`;
+                    return;
+                }
+                $col.innerHTML = '';
+                for (const s of rows) {
+                    const btn = document.createElement('div');
+                    btn.className = 'tp-scene-item';
+                    btn.innerHTML = `<span>${s.name}</span>`;
+                    btn.addEventListener('click', () => selectDestScene(s));
+                    $col.appendChild(btn);
+                }
+            }
+            renderCol($tpSceneListIndoor, indoor, '실내 씬이 없습니다');
+            renderCol($tpSceneListOutdoor, outdoor, '실외 씬이 없습니다');
+        }
+
+        function selectDestScene(sceneRow) {
+            // 현재 pending 의 source 는 이미 저장돼 있어야 함
+            const pending = JSON.parse(sessionStorage.getItem(TP_SS_KEY) || 'null');
+            if (!pending || !pending.source) {
+                console.warn('[TP] pending source missing');
+                return;
+            }
+            pending.step = 'placing_dest';
+            pending.destUrl = sceneRow.url;
+            pending.destSceneName = sceneRow.name;
+            sessionStorage.setItem(TP_SS_KEY, JSON.stringify(pending));
+            // 해당 씬으로 이동 — 씬 기본 spawn 으로 들어감, 이후 사용자가 원하는 위치로 움직인 뒤 "여기로 하기"
+            const qs = new URLSearchParams();
+            qs.set('data', sceneRow.url);
+            ['px', 'py', 'pz', 'yaw', 'pitch', 'mesh'].forEach(k => { if (sceneRow[k]) qs.set(k, sceneRow[k]); });
+            location.href = `./viewer.html?${qs.toString()}`;
+        }
+
+        function cancelTpCreate() {
+            sessionStorage.removeItem(TP_SS_KEY);
+            hideTpPlacePanel();
+            hideTpSceneModal();
+            tpState = 'idle';
+            if (controls) controls.enabled = true;
+            console.info('[TP] creation cancelled');
+        }
+
+        function enterPlacingSource() {
+            tpState = 'placing_source';
+            sessionStorage.removeItem(TP_SS_KEY);
+            showTpPlacePanel(1);
+        }
+
+        function enterPlacingDest() {
+            tpState = 'placing_dest';
+            showTpPlacePanel(2);
+        }
+
+        // buildUpdatedTeleportsCsv / downloadText 는 modules/*/storage.js 및 csv-utils.js 로 이동.
+
+        // 최종 확정: 쌍방 텔레포트 2행 생성 → localStorage 저장 + CSV 다운로드 + console dump
+        async function finalizeTeleport() {
+            const pending = JSON.parse(sessionStorage.getItem(TP_SS_KEY) || 'null');
+            if (!pending || !pending.source) {
+                console.warn('[TP] finalize: pending missing');
+                cancelTpCreate();
+                return;
+            }
+            const dest = getCameraPose();
+            const src = pending.source;
+            const srcUrl = src.url;
+            const destUrl = DATA_PATH; // 현재 열려있는 씬 = 목적 씬
+            const srcMatch = extractSceneMatch(srcUrl);
+            const destMatch = extractSceneMatch(destUrl);
+            const destSceneName = pending.destSceneName || '목적지';
+            const srcSceneName = pending.srcSceneName || '출발지';
+            // 2 행 생성 (source → dest, dest → source)
+            const rowAB = {
+                scene_match: srcMatch,
+                trigger_px: src.px, trigger_py: src.py, trigger_pz: src.pz,
+                radius: '3.0',
+                marker_y: (src.py - 1.5).toFixed(2),
+                arrow_yaw: src.yaw,
+                dest_url: destUrl,
+                dest_px: dest.px, dest_py: dest.py, dest_pz: dest.pz,
+                dest_yaw: dest.yaw, dest_pitch: dest.pitch,
+                label: `${destSceneName} 으로 이동하기`,
+            };
+            const rowBA = {
+                scene_match: destMatch,
+                trigger_px: dest.px, trigger_py: dest.py, trigger_pz: dest.pz,
+                radius: '3.0',
+                marker_y: (dest.py - 1.5).toFixed(2),
+                arrow_yaw: dest.yaw,
+                dest_url: srcUrl,
+                dest_px: src.px, dest_py: src.py, dest_pz: src.pz,
+                dest_yaw: src.yaw, dest_pitch: src.pitch,
+                label: `${srcSceneName} 으로 이동하기`,
+            };
+            // replace 모드면 기존 쌍 제거
+            if (pending.mode === 'replace' && Array.isArray(pending.oldKeys)) {
+                const userRowsBefore = loadUserTeleports();
+                const filteredUser = userRowsBefore.filter(r => {
+                    const k = teleportRowKey(r.scene_match, r.trigger_px, r.trigger_pz);
+                    return !pending.oldKeys.includes(k);
+                });
+                saveUserTeleports(filteredUser);
+                const deletions = loadDeletions();
+                for (const k of pending.oldKeys) if (!deletions.includes(k)) deletions.push(k);
+                saveDeletions(deletions);
+                // 소스 씬의 기존 마커도 씬에서 지움 — 하지만 우리는 지금 '도착' 씬에 있음.
+                // 소스로 다시 돌아갔을 때 loadTeleports 가 deletions 반영해서 자동 제외됨.
+                // 현재 씬(=새 도착) 에서 반대 방향 마커는 아래에서 push.
+                console.info('[TP] replace mode: removed old keys', pending.oldKeys);
+            }
+
+            // pending 이 replace 이고 source 가 보존한 arrow_yaw / marker_y 가 있으면 덮어쓰기
+            if (pending.mode === 'replace') {
+                if (pending.sourceArrowYawDeg !== undefined) rowAB.arrow_yaw = pending.sourceArrowYawDeg;
+                if (pending.sourceMarkerY !== undefined) rowAB.marker_y = (+pending.sourceMarkerY).toFixed(2);
+            }
+
+            // localStorage 에 누적 저장
+            const userRows = loadUserTeleports();
+            userRows.push(rowAB, rowBA);
+            saveUserTeleports(userRows);
+            console.info('[TP] saved teleport pair (mode=%s):', pending.mode || 'create', rowAB, rowBA);
+
+            // CSV 생성/다운로드
+            const csvText = await buildUpdatedTeleportsCsv();
+            console.info('─── Updated teleports.csv (복사해서 프로젝트의 teleports.csv 에 저장) ───');
+            console.info(csvText);
+            console.info('──────────────────────────────────────────────────────────────────');
+            downloadText('teleports.csv', csvText);
+
+            // 정리
+            sessionStorage.removeItem(TP_SS_KEY);
+            hideTpPlacePanel();
+            tpState = 'idle';
+
+            // replace 모드면 현재(도착) 씬에 남아있을 수 있는 "옛 반대방향" 마커 제거
+            if (pending.mode === 'replace' && Array.isArray(pending.oldKeys)) {
+                const curSceneMatch = extractSceneMatch(DATA_PATH);
+                for (let i = activeTeleports.length - 1; i >= 0; i--) {
+                    const t = activeTeleports[i];
+                    const k = teleportRowKey(curSceneMatch, t.trigger.x, t.trigger.z);
+                    if (pending.oldKeys.includes(k)) {
+                        if (t.marker && t.marker.parent) scene.remove(t.marker);
+                        activeTeleports.splice(i, 1);
+                    }
+                }
+            }
+
+            // 새 텔레포트가 현재 씬에도 하나 붙었으니 마커 즉시 추가
+            const destTeleportData = {
+                trigger: new THREE.Vector3(dest.px, dest.py, dest.pz),
+                markerY: dest.py - 1.5,
+                arrowYaw: dest.yaw * (Math.PI / 180),
+                radius: 3.0,
+                destUrl: srcUrl,
+                destPx: src.px, destPy: src.py, destPz: src.pz,
+                destYaw: src.yaw, destPitch: src.pitch,
+                label: rowBA.label,
+                marker: null,
+            };
+            destTeleportData.marker = buildTeleportMarker(destTeleportData);
+            scene.add(destTeleportData.marker);
+            activeTeleports.push(destTeleportData);
+
+            const msg = pending.mode === 'replace'
+                ? '텔레포트 연결이 변경되었습니다.\n\n업데이트된 teleports.csv 가 다운로드 됐어요.'
+                : '쌍방 텔레포트 생성 완료!\n\n업데이트된 teleports.csv 가 다운로드 됐어요.\n프로젝트의 teleports.csv 에 덮어쓰면 영구 반영됩니다.';
+            alert(msg);
+        }
+
+        // + TELEPORT 버튼 클릭
+        $btnTpCreate?.addEventListener('click', () => {
+            if (!requireAdmin('teleportCreate')) return;
+            if (tpState !== 'idle') { cancelTpCreate(); return; }
+            enterPlacingSource();
+        });
+
+        // "여기로 하기" 클릭
+        $tpHereBtn?.addEventListener('click', async () => {
+            if (tpState === 'placing_source') {
+                const pose = getCameraPose();
+                const pending = {
+                    step: 'picking_scene',
+                    source: { ...pose, url: DATA_PATH },
+                    srcSceneName: document.title || '출발지',
+                };
+                sessionStorage.setItem(TP_SS_KEY, JSON.stringify(pending));
+                hideTpPlacePanel();
+                tpState = 'picking_scene';
+                await openScenePicker();
+            } else if (tpState === 'placing_dest') {
+                await finalizeTeleport();
+            }
+        });
+
+        // "취소" 클릭
+        $tpCancelBtn?.addEventListener('click', cancelTpCreate);
+        $tpSceneCancel?.addEventListener('click', () => {
+            hideTpSceneModal();
+            // 취소해도 pending.source 는 남겨두고 다시 place panel 보여줘도 되는데,
+            // 단순성 위해 완전 취소.
+            cancelTpCreate();
+        });
+
+        // 페이지 로드 시: sessionStorage 의 pending 검사 → step=placing_dest 면 자동 진입
+        (function resumePendingTeleport() {
+            const pending = JSON.parse(sessionStorage.getItem(TP_SS_KEY) || 'null');
+            if (!pending) return;
+            if (pending.step === 'placing_dest' && pending.destUrl && DATA_PATH === pending.destUrl) {
+                console.info('[TP] resume: placing_dest in', pending.destUrl);
+                enterPlacingDest();
+            } else if (pending.step === 'picking_scene') {
+                // 사용자가 씬 선택 모달에서 브라우저 뒤로가기 등으로 도로 돌아온 경우 → 모달 다시 열기
+                console.info('[TP] resume: reopening scene picker');
+                enterPlacingSource(); // 일단 STEP 1 로 되돌림 (안전)
+                // 혹은 바로 openScenePicker() 로 재진입하려면 source 가 유지돼 있으므로 가능
+            }
+        })();
 
         const _tpCamPos = new THREE.Vector3();
         function updateTeleports() {
@@ -2957,7 +4062,7 @@
                 a.innerRing.material.opacity = 0.45 + near * 0.45;
                 a.disc.material.opacity = 0.12 + near * 0.25;
                 a.pillar.material.opacity = 0.06 + near * 0.18;
-                if (a.pillarDown) a.pillarDown.material.opacity = 0.06 + near * 0.18;
+                if (a.arrow) a.arrow.material.opacity = 0.5 + near * 0.4;
             }
 
             if (best) {
@@ -2965,11 +4070,53 @@
                     currentTeleport = best;
                     $teleportBtn.textContent = best.label;
                 }
-                $teleportBtn.classList.remove('hidden');
+                // 편집 중이면 텔레포트/에디트 버튼 둘 다 숨긴 채 유지 (패널만 보임)
+                if (!editingTeleport) {
+                    $teleportBtn.classList.remove('hidden');
+                    $teleportEditBtn.classList.remove('hidden');
+                }
             } else {
                 $teleportBtn.classList.add('hidden');
+                $teleportEditBtn.classList.add('hidden');
                 currentTeleport = null;
+                // 편집 중인 상태에서 범위 벗어나도 편집 패널은 그대로 둠 (사용자가 DONE 칠 때까지)
             }
+        }
+
+        // ── Setup mode: 새 씬의 spawn 위치 확정 ───────────────────────────
+        // 확인 → scenes CSV 업데이트 + 다운로드 → index.html 로 복귀.
+        // 취소 → localStorage 에 방금 추가된 씬 제거 → index.html 로 복귀.
+        if (IS_SETUP) {
+            const $setupConfirm = document.getElementById('setup-confirm');
+            const $setupCancel  = document.getElementById('setup-cancel');
+
+            $setupConfirm?.addEventListener('click', async () => {
+                const pose = getCameraPose(); // { px, py, pz, yaw, pitch }
+                const ok = updateSceneSpawn(SETUP_GROUP, DATA_PATH, pose);
+                if (!ok) {
+                    alert('저장 실패: 이 씬의 사용자 레코드를 찾을 수 없습니다.\n(index.html 에서 다시 + 새로운 공간 추가 로 시작해 주세요)');
+                    return;
+                }
+                console.info(`[Viewer] scene spawn saved for ${DATA_PATH}:`, pose);
+                try {
+                    const csvText = await buildUpdatedScenesCsv(SETUP_GROUP);
+                    const filename = SETUP_GROUP === 'outdoor' ? 'scenes-outdoor.csv' : 'scenes.csv';
+                    console.info(`─── ${filename} (덮어쓰기용) ───`);
+                    console.info(csvText);
+                    downloadText(filename, csvText);
+                } catch (e) {
+                    console.warn('[Viewer] scenes CSV build failed:', e);
+                }
+                alert(`새 씬 등록 완료!\n\nSpawn: (${pose.px}, ${pose.py}, ${pose.pz}) yaw ${pose.yaw}° pitch ${pose.pitch}°\n\n업데이트된 ${SETUP_GROUP === 'outdoor' ? 'scenes-outdoor.csv' : 'scenes.csv'} 가 다운로드 됐어요.\n프로젝트 폴더에 덮어쓰면 영구 반영됩니다.`);
+                location.href = './';
+            });
+
+            $setupCancel?.addEventListener('click', () => {
+                // 이 씬에 해당하는 user scene 레코드 제거 (index.html 에서 입력한 것)
+                removeUserScene(SETUP_GROUP, DATA_PATH);
+                console.info(`[Viewer] setup cancelled — removed user scene: ${DATA_PATH}`);
+                location.href = './';
+            });
         }
 
         renderer.setAnimationLoop(render);
