@@ -6,6 +6,9 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LCC Viewer</title>
+    <!-- S3 도메인 TLS/DNS 핸드셰이크 미리 처리 — 첫 chunk 요청 전 200~500ms 절감 -->
+    <link rel="preconnect" href="https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com" crossorigin>
+    <link rel="dns-prefetch" href="https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com">
     <style>
         :root {
             color-scheme: dark;

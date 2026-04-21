@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LCC Viewer</title>
+    <!-- S3 TLS/DNS 핸드셰이크 미리. viewer.html 에서 첫 chunk 받을 때 이미 연결돼 있음 -->
+    <link rel="preconnect" href="https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com" crossorigin>
+    <link rel="dns-prefetch" href="https://ganpin-s3-test-bucket-175558635958-ap-northeast-1-an.s3.ap-northeast-1.amazonaws.com">
     <style>
         :root {
             color-scheme: dark;
@@ -440,6 +443,22 @@
             return `./viewer.html?${qs.toString()}`;
         }
 
+        // prefetch 가 한 씬당 한 번만 실행되게 기록
+        const _prefetched = new Set();
+        function prefetchScene(row) {
+            if (!row.url || _prefetched.has(row.url)) return;
+            _prefetched.add(row.url);
+            // 1) 매니페스트(.lcc) 프리페치 — 아주 작은 파일 (1~2KB), 브라우저 캐시에 올려둠
+            fetch(row.url, { mode: 'cors', credentials: 'omit', cache: 'force-cache' })
+                .catch(() => { /* 네트워크 에러 무시 */ });
+            // 2) 스캔 메시(mesh) 도 있으면 같이 프리페치
+            if (row.mesh) {
+                fetch(row.mesh, { mode: 'cors', credentials: 'omit', cache: 'force-cache' })
+                    .catch(() => {});
+            }
+            console.info('[Main] prefetch started:', row.name);
+        }
+
         function renderList(container, rows) {
             if (rows.length === 0) {
                 container.innerHTML = '<div class="empty-msg">등록된 장면이 없습니다</div>';
@@ -448,7 +467,7 @@
             container.innerHTML = rows.map((row, i) => {
                 const href = buildViewerHref(row);
                 const index = String(i + 1).padStart(2, '0');
-                return `<a class="scene-btn" href="${href}">
+                return `<a class="scene-btn" data-row-idx="${i}" href="${href}">
                     <span class="scene-btn-name">
                         <span class="scene-btn-index">${index}</span>
                         <span class="scene-btn-label">${row.name}</span>
@@ -456,6 +475,16 @@
                     <span class="scene-btn-arrow">VIEW →</span>
                 </a>`;
             }).join('');
+
+            // 카드에 hover / touchstart 시 해당 씬의 매니페스트 + mesh prefetch
+            container.querySelectorAll('.scene-btn').forEach((btn) => {
+                const idx = parseInt(btn.dataset.rowIdx, 10);
+                const row = rows[idx];
+                const trigger = () => prefetchScene(row);
+                btn.addEventListener('mouseenter', trigger, { once: true });
+                btn.addEventListener('touchstart', trigger, { once: true, passive: true });
+                btn.addEventListener('focus', trigger, { once: true });
+            });
         }
 
         async function loadColumn(csvPath, containerId) {
